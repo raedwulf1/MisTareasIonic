@@ -1,0 +1,33 @@
+<ion-app>
+  <ion-menu contentId="main-content" type="overlay">
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>Mis tareas</ion-title>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <ion-list lines="none" class="menu-list">
+        <ion-menu-toggle [autoHide]="false">
+          <ion-item routerLink="/tasks" routerLinkActive="selected" detail="false" button>
+            <ion-icon slot="start" name="checkmark-done-outline" aria-hidden="true" />
+            <ion-label>Tareas</ion-label>
+            <ion-badge slot="end" color="medium">{{ store.counts().pending }}</ion-badge>
+          </ion-item>
+          @if (flags.categoriesEnabled()) {
+            <ion-item routerLink="/categories" routerLinkActive="selected" detail="false" button>
+              <ion-icon slot="start" name="pricetags-outline" aria-hidden="true" />
+              <ion-label>Categorías</ion-label>
+              <ion-badge slot="end" color="medium">{{ store.categories().length }}</ion-badge>
+            </ion-item>
+          }
+          <ion-item routerLink="/settings" routerLinkActive="selected" detail="false" button>
+            <ion-icon slot="start" name="settings-outline" aria-hidden="true" />
+            <ion-label>Ajustes y feature flags</ion-label>
+          </ion-item>
+        </ion-menu-toggle>
+      </ion-list>
+      <ion-note class="menu-footer">Ionic + Angular + Cordova</ion-note>
+    </ion-content>
+  </ion-menu>
+  <ion-router-outlet id="main-content" />
+</ion-app>

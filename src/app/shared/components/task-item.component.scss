@@ -1,0 +1,35 @@
+:host {
+  display: block;
+  height: 64px;
+  overflow: hidden;
+}
+ion-item {
+  --min-height: 64px;
+}
+ion-label {
+  cursor: pointer;
+}
+.title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: opacity 0.15s ease;
+}
+.done .title {
+  text-decoration: line-through;
+  opacity: 0.55;
+}
+.category {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+.muted {
+  opacity: 0.6;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}

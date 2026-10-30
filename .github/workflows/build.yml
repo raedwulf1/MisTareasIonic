@@ -1,0 +1,177 @@
+name: Build APK e IPA
+
+# Compila la app en la nube: pruebas + build web, APK de Android (Ubuntu) e IPA de iOS (macOS).
+# Al publicar un tag `v*` crea un Release de GitHub con los archivos para descargar.
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  NODE_VERSION: 22
+  CORDOVA_TELEMETRY_OPT_OUT: 1
+
+jobs:
+  web:
+    name: Pruebas y build web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm test
+      - run: npm run build
+
+  android:
+    name: APK Android
+    needs: web
+    runs-on: ubuntu-latest
+    env:
+      HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.14.2
+      - run: npm ci
+      - name: Configuración de Firebase
+        run: ./ci/firebase-config.sh
+        env:
+          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+      - name: Build web + plataforma Android
+        run: |
+          npm run build
+          npx cordova platform add android
+      - name: Compilar APK (debug, instalable directamente)
+        run: npx cordova build android --debug
+      - name: Compilar APK firmado (release)
+        if: env.HAS_KEYSTORE == 'true'
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > release.keystore
+          npx cordova build android --release -- --packageType=apk \
+            --keystore=release.keystore --storePassword="$ANDROID_KEYSTORE_PASSWORD" \
+            --alias="$ANDROID_KEY_ALIAS" --password="$ANDROID_KEY_PASSWORD"
+      - name: Reunir APKs
+        run: |
+          mkdir -p dist
+          cp platforms/android/app/build/outputs/apk/debug/app-debug.apk dist/MisTareas-debug.apk
+          if [ -f platforms/android/app/build/outputs/apk/release/app-release.apk ]; then
+            cp platforms/android/app/build/outputs/apk/release/app-release.apk dist/MisTareas-release.apk
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: dist/*.apk
+
+  ios:
+    name: IPA iOS
+    needs: web
+    runs-on: macos-15
+    env:
+      HAS_SIGNING: ${{ secrets.IOS_P12_BASE64 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - name: Configuración de Firebase
+        run: ./ci/firebase-config.sh
+        env:
+          GOOGLE_SERVICE_INFO_PLIST_BASE64: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST_BASE64 }}
+      - name: Build web + plataforma iOS
+        run: |
+          npm run build
+          npx cordova platform add ios
+          npx cordova prepare ios
+      - name: Build para el simulador de iOS (.app)
+        run: |
+          xcodebuild -project platforms/ios/App.xcodeproj -scheme App -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/sim CODE_SIGNING_ALLOWED=NO build
+          mkdir -p dist
+          APP_PATH=$(find build/sim/Build/Products -name '*.app' -maxdepth 2 | head -1)
+          ditto -c -k --keepParent "$APP_PATH" dist/MisTareas-simulator.app.zip
+      - name: Archivo para dispositivo (IPA sin firmar)
+        run: |
+          xcodebuild -project platforms/ios/App.xcodeproj -scheme App -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' -archivePath build/App.xcarchive \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" archive
+          mkdir -p build/ipa/Payload
+          cp -R build/App.xcarchive/Products/Applications/*.app build/ipa/Payload/
+          (cd build/ipa && zip -qr ../../dist/MisTareas-unsigned.ipa Payload)
+      - name: IPA firmado (si hay certificado y perfil configurados)
+        if: env.HAS_SIGNING == 'true'
+        env:
+          IOS_P12_BASE64: ${{ secrets.IOS_P12_BASE64 }}
+          IOS_P12_PASSWORD: ${{ secrets.IOS_P12_PASSWORD }}
+          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+          IOS_EXPORT_METHOD: ${{ vars.IOS_EXPORT_METHOD || 'ad-hoc' }}
+        run: |
+          KEYCHAIN=$RUNNER_TEMP/build.keychain-db
+          security create-keychain -p ci "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p ci "$KEYCHAIN"
+          echo "$IOS_P12_BASE64" | base64 --decode > $RUNNER_TEMP/cert.p12
+          security import $RUNNER_TEMP/cert.p12 -P "$IOS_P12_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN"
+          security list-keychain -d user -s "$KEYCHAIN"
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "$IOS_PROVISIONING_PROFILE_BASE64" | base64 --decode > $RUNNER_TEMP/profile.mobileprovision
+          PROFILE_UUID=$(security cms -D -i $RUNNER_TEMP/profile.mobileprovision | plutil -extract UUID raw -)
+          cp $RUNNER_TEMP/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$PROFILE_UUID.mobileprovision
+          xcodebuild -project platforms/ios/App.xcodeproj -scheme App -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' -archivePath build/Signed.xcarchive \
+            DEVELOPMENT_TEAM="$IOS_TEAM_ID" CODE_SIGN_STYLE=Manual \
+            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_UUID" CODE_SIGN_IDENTITY="Apple Distribution" archive
+          PLIST=build/ExportOptions.plist
+          /usr/libexec/PlistBuddy -c "Add :method string $IOS_EXPORT_METHOD" $PLIST
+          /usr/libexec/PlistBuddy -c "Add :teamID string $IOS_TEAM_ID" $PLIST
+          /usr/libexec/PlistBuddy -c "Add :signingStyle string manual" $PLIST
+          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles dict" $PLIST
+          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles:com.todocategorias.app string $PROFILE_UUID" $PLIST
+          xcodebuild -exportArchive -archivePath build/Signed.xcarchive \
+            -exportOptionsPlist build/ExportOptions.plist -exportPath build/export
+          cp build/export/*.ipa dist/MisTareas.ipa
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa
+          path: dist/*
+
+  release:
+    name: Publicar Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [android, ios]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true

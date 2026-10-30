@@ -1,0 +1,30 @@
+/* Solo el CSS de Ionic que se usa: núcleo, normalización, estructura y tipografía. */
+@import '@ionic/angular/css/core.css';
+@import '@ionic/angular/css/normalize.css';
+@import '@ionic/angular/css/structure.css';
+@import '@ionic/angular/css/typography.css';
+@import '@ionic/angular/css/padding.css';
+@import '@ionic/angular/css/text-alignment.css';
+
+/* Modo oscuro automático según la preferencia del sistema. */
+@import '@ionic/angular/css/palettes/dark.system.css';
+
+:root {
+  --ion-color-primary: #4f46e5;
+  --ion-color-primary-rgb: 79, 70, 229;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #463ec9;
+  --ion-color-primary-tint: #6159e7;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ion-color-primary: #818cf8;
+    --ion-color-primary-rgb: 129, 140, 248;
+    --ion-color-primary-contrast: #000000;
+    --ion-color-primary-contrast-rgb: 0, 0, 0;
+    --ion-color-primary-shade: #727bda;
+    --ion-color-primary-tint: #8e98f9;
+  }
+}

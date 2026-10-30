@@ -1,0 +1,43 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="cancel()">Cancelar</ion-button>
+    </ion-buttons>
+    <ion-title>Editar tarea</ion-title>
+    <ion-buttons slot="end">
+      <ion-button strong (click)="save()" [disabled]="!title().trim()">Guardar</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+<ion-content class="ion-padding">
+  <ion-input
+    label="Título"
+    labelPlacement="stacked"
+    fill="outline"
+    [ngModel]="title()"
+    (ngModelChange)="title.set($event)"
+    (keyup.enter)="save()"
+    [maxlength]="200"
+    [counter]="true"
+  />
+  @if (showCategories()) {
+    <ion-list>
+      <ion-list-header>Categoría</ion-list-header>
+      <ion-radio-group
+        [value]="categoryId() ?? 'none'"
+        (ionChange)="selectCategory($event.detail.value)"
+      >
+        <ion-item>
+          <ion-radio value="none">Sin categoría</ion-radio>
+        </ion-item>
+        @for (c of categories(); track c.id) {
+          <ion-item>
+            <ion-radio [value]="c.id">
+              <span class="dot" [style.background]="c.color"></span>{{ c.name }}
+            </ion-radio>
+          </ion-item>
+        }
+      </ion-radio-group>
+    </ion-list>
+  }
+</ion-content>

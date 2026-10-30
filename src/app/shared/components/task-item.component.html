@@ -1,0 +1,25 @@
+<ion-item-sliding #sliding>
+  <ion-item lines="full" [class.done]="task().completed">
+    <ion-checkbox
+      slot="start"
+      [checked]="task().completed"
+      (ionChange)="toggle.emit(task().id)"
+      [attr.aria-label]="task().completed ? 'Marcar como pendiente' : 'Marcar como completada'"
+    />
+    <ion-label class="ion-text-nowrap" (click)="edit.emit(task())">
+      <h2 class="title">{{ task().title }}</h2>
+      @if (showCategory()) {
+        @if (category(); as c) {
+          <p class="category"><span class="dot" [style.background]="c.color"></span>{{ c.name }}</p>
+        } @else {
+          <p class="category muted">Sin categoría</p>
+        }
+      }
+    </ion-label>
+  </ion-item>
+  <ion-item-options side="end" (ionSwipe)="remove.emit(task().id)">
+    <ion-item-option color="danger" expandable (click)="sliding.close(); remove.emit(task().id)">
+      <ion-icon slot="icon-only" name="trash-outline" aria-label="Eliminar" />
+    </ion-item-option>
+  </ion-item-options>
+</ion-item-sliding>

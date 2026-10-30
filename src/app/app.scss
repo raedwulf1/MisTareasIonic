@@ -1,0 +1,16 @@
+.menu-list ion-item {
+  --border-radius: 8px;
+  margin: 4px 8px;
+}
+.menu-list ion-item.selected {
+  --background: rgba(var(--ion-color-primary-rgb), 0.14);
+  --color: var(--ion-color-primary);
+}
+.menu-list ion-item.selected ion-icon {
+  color: var(--ion-color-primary);
+}
+.menu-footer {
+  display: block;
+  padding: 16px 24px;
+  font-size: 12px;
+}

@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.todocategorias.app" version="1.0.0" android-versionCode="1"
+        xmlns="http://www.w3.org/ns/widgets"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>Mis Tareas</name>
+    <description>To-Do List con categorías y feature flags (Ionic + Angular + Cordova).</description>
+    <author href="https://github.com">Prueba técnica Ionic</author>
+    <content src="index.html" />
+
+    <access origin="*" />
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+
+    <preference name="DisallowOverscroll" value="true" />
+    <preference name="BackgroundColor" value="0xffffffff" />
+    <preference name="Orientation" value="portrait" />
+
+    <platform name="android">
+        <preference name="AndroidWindowSplashScreenBackground" value="#4f46e5" />
+        <preference name="AndroidPersistentFileLocation" value="Internal" />
+        <!-- El SDK de Firebase requiere API 23+. -->
+        <preference name="android-minSdkVersion" value="24" />
+    </platform>
+
+    <platform name="ios">
+        <preference name="deployment-target" value="15.0" />
+        <preference name="WKWebViewOnly" value="true" />
+        <preference name="AutoHideSplashScreen" value="true" />
+        <preference name="SplashScreenDelay" value="0" />
+    </platform>
+</widget>

@@ -1,0 +1,45 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="cancel()">Cancelar</ion-button>
+    </ion-buttons>
+    <ion-title>{{ category() ? 'Editar' : 'Nueva' }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button strong (click)="save()" [disabled]="!!error() || !name().trim()"
+        >Guardar</ion-button
+      >
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+<ion-content class="ion-padding">
+  <ion-input
+    label="Nombre"
+    labelPlacement="stacked"
+    fill="outline"
+    [maxlength]="30"
+    [counter]="true"
+    [ngModel]="name()"
+    (ngModelChange)="name.set($event ?? '')"
+    (keyup.enter)="save()"
+  />
+  @if (error(); as message) {
+    <ion-text color="danger"
+      ><p class="error">{{ message }}</p></ion-text
+    >
+  }
+  <p class="label">Color</p>
+  <div class="swatches" role="radiogroup" aria-label="Color de la categoría">
+    @for (c of colors; track c) {
+      <button
+        type="button"
+        class="swatch"
+        role="radio"
+        [attr.aria-checked]="color() === c"
+        [attr.aria-label]="'Color ' + c"
+        [class.selected]="color() === c"
+        [style.background]="c"
+        (click)="color.set(c)"
+      ></button>
+    }
+  </div>
+</ion-content>
