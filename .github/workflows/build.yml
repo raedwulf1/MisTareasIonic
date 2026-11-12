@@ -30,6 +30,7 @@ jobs:
       - run: npm run format:check
       - run: npm test
       - run: npm run build
+      - run: npm run test:e2e
 
   android:
     name: APK Android
