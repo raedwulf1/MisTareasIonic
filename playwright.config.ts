@@ -12,6 +12,8 @@ const PORT = 4321;
 export default defineConfig({
   testDir: './e2e',
   testMatch: '**/*.e2e.ts',
+  // Imágenes de referencia de la regresión visual (se versionan; ver e2e/support/test.ts).
+  snapshotPathTemplate: '{testDir}/__screenshots__/{projectName}/{platform}/{arg}{ext}',
   fullyParallel: true,
   forbidOnly: !!process.env['CI'],
   retries: process.env['CI'] ? 2 : 0,
