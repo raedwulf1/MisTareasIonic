@@ -14,7 +14,9 @@
     "android:release": "ng build && cordova build android --release -- --packageType=apk",
     "ios:emulate": "ng build && cordova emulate ios",
     "ios:run": "ng build && cordova run ios",
-    "ios:build": "ng build && cordova build ios"
+    "ios:build": "ng build && cordova build ios",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "private": true,
   "packageManager": "npm@10.9.4",
@@ -40,6 +42,7 @@
     "@angular/compiler-cli": "^21.2.0",
     "@ionic/angular-toolkit": "^13.0.0",
     "@ionic/cli": "^7.2.1",
+    "@playwright/test": "1.64.1",
     "@schematics/angular": "21.2.27",
     "cordova": "^13.0.0",
     "cordova-android": "^15.1.0",
@@ -51,7 +54,7 @@
     "typescript": "~5.9.2",
     "vitest": "^4.0.8"
   },
-  "description": "To-Do List con categor\u00edas (Ionic + Angular + Cordova + Firebase Remote Config)",
+  "description": "To-Do List con categorías (Ionic + Angular + Cordova + Firebase Remote Config)",
   "cordova": {
     "platforms": [
       "android",

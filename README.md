@@ -118,8 +118,10 @@ npm run android:build                # APK debug → platforms/android/app/build
 npx cordova platform add ios
 npm run ios:emulate                  # build + abre en el simulador
 npm run ios:build                    # build web + proyecto Xcode
-open platforms/ios/App.xcodeproj
+open platforms/ios/App.xcworkspace
 ```
+
+Abre siempre el workspace (`.xcworkspace`), no el proyecto (`.xcodeproj`): el workspace incluye el target `Pods-App` que necesita el linker.
 
 **Dispositivo e IPA:**
 1. En Xcode, selecciona el target **App** → *Signing & Capabilities* → marca *Automatically manage signing* y elige tu *Team* (sirve un Apple ID gratuito para instalar en tu propio iPhone; para distribuir un IPA hace falta una cuenta de Apple Developer).
@@ -129,7 +131,7 @@ open platforms/ios/App.xcodeproj
 También puedes generarlo sin abrir Xcode:
 
 ```bash
-xcodebuild -project platforms/ios/App.xcodeproj -scheme App -configuration Release \
+xcodebuild -workspace platforms/ios/App.xcworkspace -scheme App -configuration Release \
   -sdk iphoneos -archivePath build/App.xcarchive DEVELOPMENT_TEAM=<TEAM_ID> archive
 xcodebuild -exportArchive -archivePath build/App.xcarchive \
   -exportOptionsPlist ExportOptions.plist -exportPath build/ipa

@@ -109,7 +109,7 @@ jobs:
           npx cordova prepare ios
       - name: Build para el simulador de iOS (.app)
         run: |
-          xcodebuild -project platforms/ios/App.xcodeproj -scheme App -configuration Debug \
+          xcodebuild -workspace platforms/ios/App.xcworkspace -scheme App -configuration Debug \
             -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath build/sim CODE_SIGNING_ALLOWED=NO build
           mkdir -p dist
@@ -117,7 +117,7 @@ jobs:
           ditto -c -k --keepParent "$APP_PATH" dist/MisTareas-simulator.app.zip
       - name: Archivo para dispositivo (IPA sin firmar)
         run: |
-          xcodebuild -project platforms/ios/App.xcodeproj -scheme App -configuration Release \
+          xcodebuild -workspace platforms/ios/App.xcworkspace -scheme App -configuration Release \
             -sdk iphoneos -destination 'generic/platform=iOS' -archivePath build/App.xcarchive \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" archive
           mkdir -p build/ipa/Payload
@@ -143,7 +143,7 @@ jobs:
           echo "$IOS_PROVISIONING_PROFILE_BASE64" | base64 --decode > $RUNNER_TEMP/profile.mobileprovision
           PROFILE_UUID=$(security cms -D -i $RUNNER_TEMP/profile.mobileprovision | plutil -extract UUID raw -)
           cp $RUNNER_TEMP/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$PROFILE_UUID.mobileprovision
-          xcodebuild -project platforms/ios/App.xcodeproj -scheme App -configuration Release \
+          xcodebuild -workspace platforms/ios/App.xcworkspace -scheme App -configuration Release \
             -sdk iphoneos -destination 'generic/platform=iOS' -archivePath build/Signed.xcarchive \
             DEVELOPMENT_TEAM="$IOS_TEAM_ID" CODE_SIGN_STYLE=Manual \
             PROVISIONING_PROFILE_SPECIFIER="$PROFILE_UUID" CODE_SIGN_IDENTITY="Apple Distribution" archive
