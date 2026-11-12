@@ -1,0 +1,103 @@
+name: E2E (Playwright)
+
+# Pruebas end-to-end con validación visual (capturas) en Ubuntu.
+#
+# Ejecución manual (Actions → E2E (Playwright) → Run workflow) con tres acciones:
+#   probar              Ejecuta los tests (es lo mismo que hace en cada push y PR).
+#   regenerar-capturas  Genera las imágenes de referencia en Linux y las deja como artefacto
+#                       descargable (e2e-capturas-linux) para commitearlas en e2e/__screenshots__/.
+#   limpiar-cache       Borra de GitHub las cachés de navegadores de Playwright.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      accion:
+        description: Qué hacer
+        type: choice
+        default: probar
+        options: [probar, regenerar-capturas, limpiar-cache]
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: 22
+
+jobs:
+  e2e:
+    name: Tests e2e
+    if: github.event_name != 'workflow_dispatch' || inputs.accion == 'probar'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - uses: ./.github/actions/playwright-browsers
+      - run: npm run test:e2e
+      # Siempre se suben los resultados: informe HTML y, si algo falla, las capturas
+      # esperada / obtenida / diferencia de cada test.
+      - name: Subir informe y capturas de los tests
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-resultados
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  capturas:
+    name: Obtener capturas de referencia (Linux)
+    if: github.event_name == 'workflow_dispatch' && inputs.accion == 'regenerar-capturas'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - uses: ./.github/actions/playwright-browsers
+      - name: Regenerar capturas
+        run: npx playwright test --update-snapshots
+      - name: Subir capturas
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-capturas-linux
+          path: e2e/__screenshots__/
+          if-no-files-found: error
+          retention-days: 14
+
+  limpiar-cache:
+    name: Limpiar caché de Playwright
+    if: github.event_name == 'workflow_dispatch' && inputs.accion == 'limpiar-cache'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write # necesario para borrar cachés de Actions
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      # Las cachés se llaman `playwright-<so>-<versión>` (ver .github/actions/playwright-browsers).
+      - name: Borrar cachés de navegadores de Playwright
+        run: |
+          ids=$(gh cache list --repo "$GITHUB_REPOSITORY" --key playwright- --limit 100 \
+            --json id --jq '.[].id')
+          if [ -z "$ids" ]; then
+            echo "No hay cachés de Playwright."
+            exit 0
+          fi
+          for id in $ids; do
+            echo "Borrando caché $id"
+            gh cache delete "$id" --repo "$GITHUB_REPOSITORY"
+          done
