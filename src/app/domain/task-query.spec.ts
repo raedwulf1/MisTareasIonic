@@ -10,46 +10,83 @@ const TASKS: Task[] = [
 const titles = (tasks: readonly Task[]) => tasks.map((t) => t.title);
 
 describe('domain/task-query', () => {
-  it('sin filtros devuelve la misma referencia', () => {
-    expect(filterTasks(TASKS, { category: 'all', status: 'all', search: '  ' })).toBe(TASKS);
+  describe('filterTasks', () => {
+    it('sin filtros devuelve la misma referencia', () => {
+      const query = { category: 'all', status: 'all', search: '  ' } as const;
+
+      const result = filterTasks(TASKS, query);
+
+      expect(result).toBe(TASKS);
+    });
+
+    it('filtra por categoría concreta', () => {
+      const query = { category: 'trabajo', status: 'all', search: '' } as const;
+
+      const result = filterTasks(TASKS, query);
+
+      expect(titles(result)).toEqual(['Informe']);
+    });
+
+    it('filtra por "sin categoría"', () => {
+      const query = { category: 'none', status: 'all', search: '' } as const;
+
+      const result = filterTasks(TASKS, query);
+
+      expect(titles(result)).toEqual(['Sin categoría']);
+    });
+
+    it('filtra por estado pendiente', () => {
+      const query = { category: 'all', status: 'pending', search: '' } as const;
+
+      const result = filterTasks(TASKS, query);
+
+      expect(titles(result)).toEqual(['Café con Ana', 'Sin categoría']);
+    });
+
+    it('filtra por estado completada', () => {
+      const query = { category: 'all', status: 'completed', search: '' } as const;
+
+      const result = filterTasks(TASKS, query);
+
+      expect(titles(result)).toEqual(['Informe']);
+    });
+
+    it('busca sin distinguir mayúsculas ni tildes', () => {
+      const query = { category: 'all', status: 'all', search: 'CAFE' } as const;
+
+      const result = filterTasks(TASKS, query);
+
+      expect(titles(result)).toEqual(['Café con Ana']);
+    });
+
+    it('combina filtros y puede devolver una lista vacía', () => {
+      const query = { category: 'trabajo', status: 'all', search: 'cafe' } as const;
+
+      const result = filterTasks(TASKS, query);
+
+      expect(result).toEqual([]);
+    });
   });
 
-  it('filtra por categoría concreta y por "sin categoría"', () => {
-    expect(titles(filterTasks(TASKS, { category: 'trabajo', status: 'all', search: '' }))).toEqual([
-      'Informe',
-    ]);
-    expect(titles(filterTasks(TASKS, { category: 'none', status: 'all', search: '' }))).toEqual([
-      'Sin categoría',
-    ]);
+  describe('countTasks', () => {
+    it('cuenta tareas en una sola pasada', () => {
+      const counts = countTasks(TASKS);
+
+      expect(counts).toMatchObject({ all: 3, completed: 1, pending: 2, uncategorized: 1 });
+      expect(counts.byCategory.get('personal')).toBe(1);
+      expect(counts.byCategory.get('trabajo')).toBe(1);
+    });
   });
 
-  it('filtra por estado', () => {
-    expect(titles(filterTasks(TASKS, { category: 'all', status: 'pending', search: '' }))).toEqual([
-      'Café con Ana',
-      'Sin categoría',
-    ]);
-    expect(
-      titles(filterTasks(TASKS, { category: 'all', status: 'completed', search: '' })),
-    ).toEqual(['Informe']);
-  });
+  describe('isSpecificCategory', () => {
+    it.each([
+      ['all', false],
+      ['none', false],
+      ['trabajo', true],
+    ])('"%s" → %s', (filter, expected) => {
+      const result = isSpecificCategory(filter);
 
-  it('busca sin distinguir mayúsculas ni tildes y combina filtros', () => {
-    expect(titles(filterTasks(TASKS, { category: 'all', status: 'all', search: 'CAFE' }))).toEqual([
-      'Café con Ana',
-    ]);
-    expect(filterTasks(TASKS, { category: 'trabajo', status: 'all', search: 'cafe' })).toEqual([]);
-  });
-
-  it('cuenta tareas en una sola pasada', () => {
-    const counts = countTasks(TASKS);
-    expect(counts).toMatchObject({ all: 3, completed: 1, pending: 2, uncategorized: 1 });
-    expect(counts.byCategory.get('personal')).toBe(1);
-    expect(counts.byCategory.get('trabajo')).toBe(1);
-  });
-
-  it('isSpecificCategory distingue ids de los filtros especiales', () => {
-    expect(isSpecificCategory('all')).toBe(false);
-    expect(isSpecificCategory('none')).toBe(false);
-    expect(isSpecificCategory('trabajo')).toBe(true);
+      expect(result).toBe(expected);
+    });
   });
 });

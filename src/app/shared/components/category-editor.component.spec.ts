@@ -49,14 +49,21 @@ describe('CategoryEditorComponent', () => {
     });
   });
 
-  it('en modo creación muestra el título "Nueva" y Guardar deshabilitado', async () => {
+  it('en modo creación muestra el título "Nueva"', async () => {
     await render();
+
     expect(el.querySelector('ion-title')?.textContent).toContain('Nueva');
+  });
+
+  it('en modo creación Guardar está deshabilitado', async () => {
+    await render();
+
     expect(button('Guardar').disabled).toBe(true);
   });
 
   it('en modo edición muestra "Editar" con el nombre y el color de la categoría', async () => {
     await render({ id: 'x', name: 'Casa', color: CATEGORY_COLORS[3] });
+
     expect(el.querySelector('ion-title')?.textContent).toContain('Editar');
     expect((el.querySelector('ion-input') as HTMLElement & { value: string }).value).toBe('Casa');
     expect(swatches()[3].classList).toContain('category-editor__swatch--selected');
@@ -64,35 +71,48 @@ describe('CategoryEditorComponent', () => {
 
   it('muestra una muestra por cada color disponible', async () => {
     await render();
+
     expect(swatches()).toHaveLength(CATEGORY_COLORS.length);
   });
 
   it('al crear, preselecciona el siguiente color de la paleta', async () => {
     await render();
-    // El store trae 3 categorías por defecto → el siguiente color es el índice 3.
+
     expect(swatches()[3].classList).toContain('category-editor__swatch--selected');
     expect(swatches()[3].getAttribute('aria-checked')).toBe('true');
   });
 
   it('tocar una muestra cambia el color seleccionado', async () => {
     await render();
+
     swatches()[5].click();
     fixture.detectChanges();
+
     expect(swatches()[5].classList).toContain('category-editor__swatch--selected');
     expect(swatches()[3].classList).not.toContain('category-editor__swatch--selected');
   });
 
-  it('muestra un error y deshabilita Guardar si el nombre ya existe', async () => {
+  it('muestra un error si el nombre ya existe', async () => {
     await render();
+
     await typeName('trabajo');
+
     expect(el.querySelector('.category-editor__error')?.textContent).toContain(
       'Ya existe una categoría',
     );
+  });
+
+  it('deshabilita Guardar si el nombre ya existe', async () => {
+    await render();
+
+    await typeName('trabajo');
+
     expect(button('Guardar').disabled).toBe(true);
   });
 
   it('al editar, su propio nombre no cuenta como duplicado', async () => {
     await render({ id: 'trabajo', name: 'Trabajo', color: CATEGORY_COLORS[1] });
+
     expect(el.querySelector('.category-editor__error')).toBeNull();
   });
 
@@ -100,7 +120,9 @@ describe('CategoryEditorComponent', () => {
     await render();
     await typeName('  Gimnasio ');
     swatches()[2].click();
+
     button('Guardar').click();
+
     expect(modal.dismiss).toHaveBeenCalledWith(
       { name: 'Gimnasio', color: CATEGORY_COLORS[2] },
       'save',
@@ -109,13 +131,17 @@ describe('CategoryEditorComponent', () => {
 
   it('guardar con nombre vacío no cierra el modal', async () => {
     await render();
+
     fixture.componentInstance.save();
+
     expect(modal.dismiss).not.toHaveBeenCalled();
   });
 
   it('cancelar cierra el modal con rol "cancel"', async () => {
     await render();
+
     button('Cancelar').click();
+
     expect(modal.dismiss).toHaveBeenCalledWith(null, 'cancel');
   });
 });

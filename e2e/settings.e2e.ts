@@ -15,8 +15,10 @@ test.describe('/settings: feature flag categories_enabled', () => {
   test('en el navegador Remote Config no está disponible y se usa el valor por defecto', async ({
     page,
   }) => {
-    await page.goto('/settings');
     const settings = settingsPage(page);
+
+    await page.goto('/settings');
+
     await expect(
       settings.getByText('No disponible en el navegador: se usan valores por defecto.'),
     ).toBeVisible();
@@ -32,6 +34,7 @@ test.describe('/settings: feature flag categories_enabled', () => {
   }) => {
     await page.goto('/settings');
     const settings = settingsPage(page);
+
     await settings.locator('ion-segment-button[value="off"]').click();
 
     await expect(
@@ -43,12 +46,15 @@ test.describe('/settings: feature flag categories_enabled', () => {
       .toBe('{"categories_enabled":false}');
 
     await navigateWithMenu(page, settings, 'Tareas');
+
     await expect(tasksPage(page).locator('.tasks-page__chips')).toHaveCount(0);
 
     await page.goto('/categories');
+
     await expect(page).toHaveURL(/\/tasks$/);
 
     await page.goto('/settings');
+
     await expect(settingsPage(page).locator('ion-segment-button[value="off"]')).toHaveClass(
       /segment-button-checked/,
     );
@@ -61,12 +67,14 @@ test.describe('/settings: feature flag categories_enabled', () => {
     await expect(settings.getByText('Origen: Forzado localmente')).toBeVisible();
 
     await settings.locator('ion-segment-button[value="remote"]').click();
+
     await expect(settings.getByText('Origen: Valor por defecto')).toBeVisible();
     await expect(
       settings.locator('h2', { hasText: 'categories_enabled' }).locator('ion-badge'),
     ).toHaveText('ON');
 
     await page.goto('/categories');
+
     await expect(categoriesPage(page)).toBeVisible();
   });
 
@@ -75,6 +83,7 @@ test.describe('/settings: feature flag categories_enabled', () => {
   }) => {
     await page.goto('/categories');
     await navigateWithMenu(page, categoriesPage(page), 'Ajustes y feature flags');
+
     await settingsPage(page).locator('ion-segment-button[value="off"]').click();
 
     await expect(settingsPage(page).getByText('Origen: Forzado localmente')).toBeVisible();
@@ -86,6 +95,7 @@ test.describe('/settings: prueba de rendimiento', () => {
   test('genera 1.000 tareas y se muestran en la lista', async ({ page }) => {
     await page.goto('/settings');
     const settings = settingsPage(page);
+
     await settings.locator('ion-item', { hasText: 'Generar 1.000 tareas' }).click();
 
     await expect(page.locator('ion-toast')).toContainText(/Se generaron 1[.,]?000 tareas/);
@@ -93,10 +103,10 @@ test.describe('/settings: prueba de rendimiento', () => {
     await expect(settings.getByText(/Última generación: \d+ ms/)).toBeVisible();
 
     await navigateWithMenu(page, settings, 'Tareas');
+
     await expect(
       tasksPage(page).locator('ion-chip', { hasText: 'Todas' }).locator('ion-badge'),
     ).toHaveText('1000');
-    // Scroll virtual: solo se pinta una parte de las filas.
     const rendered = await tasksPage(page).locator('app-task-item').count();
     expect(rendered).toBeGreaterThan(0);
     expect(rendered).toBeLessThan(100);
@@ -106,14 +116,13 @@ test.describe('/settings: prueba de rendimiento', () => {
     await seed(page, { tasks: tasks(['Uno', null], ['Dos', 'personal']) });
     await page.goto('/settings');
     const settings = settingsPage(page);
+    const deleteAll = settings.locator('ion-item', { hasText: 'Eliminar todas las tareas' });
     await expect(settings.getByText('2 en total')).toBeVisible();
 
-    await settings.locator('ion-item', { hasText: 'Eliminar todas las tareas' }).click();
+    await deleteAll.click();
     await confirmAlert(page, 'Eliminar todas las tareas');
 
     await expect(settings.getByText('0 en total')).toBeVisible();
-    await expect(
-      settings.locator('ion-item', { hasText: 'Eliminar todas las tareas' }),
-    ).toHaveAttribute('aria-disabled', 'true');
+    await expect(deleteAll).toHaveAttribute('aria-disabled', 'true');
   });
 });

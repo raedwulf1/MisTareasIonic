@@ -14,6 +14,7 @@ import {
 test.describe('/categories', () => {
   test('lista las categorías por defecto con su número de tareas', async ({ page }) => {
     await seed(page, { tasks: tasks(['A', 'trabajo'], ['B', 'trabajo'], ['C', 'personal']) });
+
     await page.goto('/categories');
 
     const items = categoriesPage(page).locator('ion-item-sliding');
@@ -25,9 +26,9 @@ test.describe('/categories', () => {
   test('crea una categoría nueva con color', async ({ page }) => {
     await page.goto('/categories');
     await categoriesPage(page).getByRole('button', { name: 'Nueva categoría' }).click();
-
     const modal = page.locator('ion-modal app-category-editor');
     await expect(modal.locator('ion-title')).toHaveText('Nueva');
+
     await modal.getByRole('textbox', { name: 'Nombre' }).fill('Salud');
     await modal.getByRole('radio', { name: 'Color #eb445a' }).click();
     await modal.getByRole('button', { name: 'Guardar' }).click();
@@ -39,7 +40,6 @@ test.describe('/categories', () => {
       'background-color',
       'rgb(235, 68, 90)',
     );
-
     // También aparece como filtro en la lista de tareas.
     await page.goto('/tasks');
     await expect(tasksPage(page).locator('ion-chip', { hasText: 'Salud' })).toBeVisible();
@@ -48,13 +48,15 @@ test.describe('/categories', () => {
   test('no permite nombres duplicados (sin distinguir mayúsculas ni tildes)', async ({ page }) => {
     await page.goto('/categories');
     await categoriesPage(page).getByRole('button', { name: 'Nueva categoría' }).click();
-
     const modal = page.locator('ion-modal app-category-editor');
+
     await modal.getByRole('textbox', { name: 'Nombre' }).fill('  PERSONAL ');
+
     await expect(modal.getByText('Ya existe una categoría con ese nombre.')).toBeVisible();
     await expect(modal.getByRole('button', { name: 'Guardar' })).toBeDisabled();
 
     await modal.getByRole('button', { name: 'Cancelar' }).click();
+
     await expect(categoriesPage(page).locator('ion-item-sliding')).toHaveCount(3);
   });
 
@@ -62,9 +64,9 @@ test.describe('/categories', () => {
     await seed(page, { tasks: tasks(['Hacer la compra', 'compras']) });
     await page.goto('/categories');
     await categoriesPage(page).locator('ion-item', { hasText: 'Compras' }).locator('h2').click();
-
     const modal = page.locator('ion-modal app-category-editor');
     await expect(modal.locator('ion-title')).toHaveText('Editar');
+
     await modal.getByRole('textbox', { name: 'Nombre' }).fill('Supermercado');
     await modal.getByRole('button', { name: 'Guardar' }).click();
 
@@ -80,8 +82,8 @@ test.describe('/categories', () => {
   test('elimina una categoría y sus tareas quedan sin categoría', async ({ page }) => {
     await seed(page, { tasks: tasks(['Preparar demo', 'trabajo']) });
     await page.goto('/categories');
-
     const item = categoriesPage(page).locator('ion-item-sliding', { hasText: 'Trabajo' });
+
     await openSlidingOptions(item);
     await item.locator('ion-item-option[color="danger"]').click();
     await confirmAlert(page, 'Eliminar «Trabajo»');
@@ -90,7 +92,6 @@ test.describe('/categories', () => {
     await expect
       .poll(async () => (await storedTasks(page)).find((t) => t.title === 'Preparar demo'))
       .toMatchObject({ categoryId: null });
-
     await page.goto('/tasks');
     await expect(taskRow(page, 'Preparar demo')).toContainText('Sin categoría');
   });
@@ -98,6 +99,7 @@ test.describe('/categories', () => {
   test('cancelar la eliminación mantiene la categoría', async ({ page }) => {
     await page.goto('/categories');
     const item = categoriesPage(page).locator('ion-item-sliding', { hasText: 'Personal' });
+
     await openSlidingOptions(item);
     await item.locator('ion-item-option[color="danger"]').click();
     await confirmAlert(page, 'Eliminar «Personal»', 'Cancelar');
@@ -107,7 +109,9 @@ test.describe('/categories', () => {
 
   test('muestra el estado vacío si no hay categorías', async ({ page }) => {
     await seed(page, { categories: [] });
+
     await page.goto('/categories');
+
     await expect(
       categoriesPage(page).getByText('No hay categorías. Crea una con el botón +.'),
     ).toBeVisible();

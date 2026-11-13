@@ -27,27 +27,32 @@ describe('TaskItemComponent', () => {
 
   it('muestra el título de la tarea', () => {
     render();
+
     expect(el.querySelector('.task-item__title')?.textContent).toContain('Comprar pan');
   });
 
   it('muestra el nombre y el color de la categoría', () => {
     render({ category: CATEGORY });
+
     expect(el.querySelector('.task-item__category')?.textContent).toContain('Compras');
     expect((el.querySelector('.task-item__dot') as HTMLElement).style.background).not.toBe('');
   });
 
   it('muestra "Sin categoría" cuando no hay categoría', () => {
     render();
+
     expect(el.querySelector('.task-item__category--muted')?.textContent).toContain('Sin categoría');
   });
 
   it('oculta la categoría cuando showCategory es false', () => {
     render({ category: CATEGORY, showCategory: false });
+
     expect(el.querySelector('.task-item__category')).toBeNull();
   });
 
   it('marca la fila como hecha y el checkbox como marcado si está completada', () => {
     render({ task: { ...TASK, completed: true } });
+
     expect(el.querySelector('ion-item')?.classList).toContain('task-item__item--done');
     expect(el.querySelector('ion-checkbox')?.getAttribute('aria-label')).toBe(
       'Marcar como pendiente',
@@ -56,6 +61,7 @@ describe('TaskItemComponent', () => {
 
   it('el checkbox de una tarea pendiente ofrece marcarla como completada', () => {
     render();
+
     expect(el.querySelector('ion-checkbox')?.getAttribute('aria-label')).toBe(
       'Marcar como completada',
     );
@@ -65,7 +71,9 @@ describe('TaskItemComponent', () => {
     render();
     const spy = vi.fn();
     fixture.componentInstance.toggle.subscribe(spy);
+
     el.querySelector('ion-checkbox')!.dispatchEvent(new CustomEvent('ionChange'));
+
     expect(spy).toHaveBeenCalledWith('t1');
   });
 
@@ -73,7 +81,9 @@ describe('TaskItemComponent', () => {
     render();
     const spy = vi.fn();
     fixture.componentInstance.edit.subscribe(spy);
+
     (el.querySelector('ion-label') as HTMLElement).click();
+
     expect(spy).toHaveBeenCalledWith(TASK);
   });
 
@@ -83,7 +93,9 @@ describe('TaskItemComponent', () => {
     fixture.componentInstance.remove.subscribe(spy);
     const sliding = el.querySelector('ion-item-sliding') as HTMLElement & { close: () => void };
     sliding.close = vi.fn();
+
     (el.querySelector('ion-item-option') as HTMLElement).click();
+
     expect(sliding.close).toHaveBeenCalled();
     expect(spy).toHaveBeenCalledWith('t1');
   });
@@ -92,7 +104,9 @@ describe('TaskItemComponent', () => {
     render();
     const spy = vi.fn();
     fixture.componentInstance.remove.subscribe(spy);
+
     el.querySelector('ion-item-options')!.dispatchEvent(new CustomEvent('ionSwipe'));
+
     expect(spy).toHaveBeenCalledWith('t1');
   });
 });

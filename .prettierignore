@@ -1,0 +1,9 @@
+dist
+www
+platforms
+plugins
+.angular
+test-results
+playwright-report
+node_modules
+package-lock.json

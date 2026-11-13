@@ -34,7 +34,9 @@ describe('FeatureFlagsService', () => {
 
   it('usa el valor por defecto si no hay plugin nativo', async () => {
     const flags = TestBed.inject(FeatureFlagsService);
+
     await flags.init();
+
     expect(flags.status()).toBe('unavailable');
     expect(flags.categoriesEnabled()).toBe(true);
     expect(flags.source('categories_enabled')).toBe('default');
@@ -44,7 +46,9 @@ describe('FeatureFlagsService', () => {
     mockRemoteConfig({ categories_enabled: 'false' });
     const flags = TestBed.inject(FeatureFlagsService);
     await flags.init();
+
     await flags.refresh();
+
     expect(flags.categoriesEnabled()).toBe(false);
     expect(flags.source('categories_enabled')).toBe('remote');
     expect(flags.status()).toBe('ready');
@@ -54,9 +58,20 @@ describe('FeatureFlagsService', () => {
     mockRemoteConfig({ categories_enabled: 'false' });
     const flags = TestBed.inject(FeatureFlagsService);
     await flags.init();
+
     flags.setOverride('categories_enabled', true);
+
     expect(flags.categoriesEnabled()).toBe(true);
+  });
+
+  it('al quitar el override local se vuelve al valor de Remote Config', async () => {
+    mockRemoteConfig({ categories_enabled: 'false' });
+    const flags = TestBed.inject(FeatureFlagsService);
+    await flags.init();
+    flags.setOverride('categories_enabled', true);
+
     flags.setOverride('categories_enabled', null);
+
     expect(flags.categoriesEnabled()).toBe(false);
   });
 });

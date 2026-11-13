@@ -47,6 +47,7 @@ describe('App', () => {
 
   it('muestra el título del menú y el pie', async () => {
     await render();
+
     expect(el.querySelector('ion-menu ion-title')?.textContent).toContain('Mis tareas');
     expect(el.querySelector('.app-menu__footer')?.textContent).toContain(
       'Ionic + Angular + Cordova',
@@ -55,6 +56,7 @@ describe('App', () => {
 
   it('el menú tiene Tareas, Categorías y Ajustes con sus enlaces', async () => {
     await render();
+
     expect(labels()).toEqual(['Tareas', 'Categorías', 'Ajustes y feature flags']);
     expect(
       items().map((i) => i.getAttribute('ng-reflect-router-link') ?? i.getAttribute('href')),
@@ -65,32 +67,41 @@ describe('App', () => {
     const done = store.addTask('A')!;
     store.addTask('B');
     store.toggleTask(done.id);
+
     await render();
+
     const badges = Array.from(el.querySelectorAll('ion-badge')).map((b) => b.textContent?.trim());
     expect(badges).toEqual(['1', '3']);
   });
 
   it('las insignias se actualizan al cambiar el estado', async () => {
     await render();
+
     store.addTask('A');
     fixture.detectChanges();
+
     expect(el.querySelector('ion-badge')?.textContent?.trim()).toBe('1');
   });
 
   it('oculta la entrada Categorías cuando el feature flag está apagado', async () => {
     flags.setOverride('categories_enabled', false);
+
     await render();
+
     expect(labels()).toEqual(['Tareas', 'Ajustes y feature flags']);
   });
 
   it('inicializa Remote Config tras el primer render', async () => {
     const init = vi.spyOn(flags, 'init').mockResolvedValue();
+
     await render();
+
     expect(init).toHaveBeenCalledTimes(1);
   });
 
   it('contiene el router outlet principal', async () => {
     await render();
+
     expect(el.querySelector('ion-router-outlet#main-content')).not.toBeNull();
   });
 });

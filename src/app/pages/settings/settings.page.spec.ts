@@ -49,137 +49,240 @@ describe('SettingsPage', () => {
     flags = TestBed.inject(FeatureFlagsService);
   });
 
+  const refreshButton = () =>
+    Array.from(el.querySelectorAll('ion-button')).find((b) =>
+      b.textContent?.includes('Actualizar'),
+    ) as HTMLElement & { disabled: boolean };
+  const flagBadge = () => el.querySelector('ion-badge')?.textContent?.trim();
+  const chooseSegment = (value: string) =>
+    el
+      .querySelector('ion-segment')!
+      .dispatchEvent(new CustomEvent('ionChange', { detail: { value } }));
+  const deleteAllItem = () => item('Eliminar todas') as HTMLElement & { disabled: boolean };
+
   it('muestra el título y las secciones', async () => {
     await render();
+
     expect(el.querySelector('ion-title')?.textContent).toContain('Ajustes');
     expect(text()).toContain('Feature flags (Remote Config)');
     expect(text()).toContain('Prueba de rendimiento');
   });
 
-  it('muestra el estado de Remote Config según el servicio', async () => {
-    await render();
-    expect(text()).toContain('Inicializando');
-    flags.status.set('unavailable');
-    fixture.detectChanges();
-    expect(text()).toContain('No disponible en el navegador');
-    flags.status.set('ready');
-    fixture.detectChanges();
-    expect(text()).toContain('Conectado a Firebase');
-    flags.status.set('error');
-    flags.lastError.set('timeout');
-    fixture.detectChanges();
-    expect(text()).toContain('Sin conexión con Firebase (timeout)');
+  describe('estado de Remote Config', () => {
+    it('muestra "Inicializando" al arrancar', async () => {
+      await render();
+
+      expect(text()).toContain('Inicializando');
+    });
+
+    it('muestra que no está disponible en el navegador', async () => {
+      await render();
+
+      flags.status.set('unavailable');
+      fixture.detectChanges();
+
+      expect(text()).toContain('No disponible en el navegador');
+    });
+
+    it('muestra que está conectado a Firebase', async () => {
+      await render();
+
+      flags.status.set('ready');
+      fixture.detectChanges();
+
+      expect(text()).toContain('Conectado a Firebase');
+    });
+
+    it('muestra el error de conexión', async () => {
+      await render();
+
+      flags.status.set('error');
+      flags.lastError.set('timeout');
+      fixture.detectChanges();
+
+      expect(text()).toContain('Sin conexión con Firebase (timeout)');
+    });
+
+    it('no muestra spinner si no está cargando', async () => {
+      await render();
+
+      expect(el.querySelector('ion-spinner')).toBeNull();
+    });
+
+    it('muestra un spinner en lugar del botón Actualizar mientras carga', async () => {
+      await render();
+
+      flags.status.set('loading');
+      fixture.detectChanges();
+
+      expect(el.querySelector('ion-spinner')).not.toBeNull();
+      expect(text()).toContain('Descargando configuración');
+    });
+
+    it('deshabilita Actualizar si Remote Config no está disponible', async () => {
+      await render();
+
+      flags.status.set('unavailable');
+      fixture.detectChanges();
+
+      expect(refreshButton().disabled).toBe(true);
+    });
+
+    it('habilita Actualizar si Remote Config está disponible', async () => {
+      await render();
+
+      flags.status.set('ready');
+      fixture.detectChanges();
+
+      expect(refreshButton().disabled).toBe(false);
+    });
+
+    it('Actualizar fuerza una descarga de Remote Config', async () => {
+      const refresh = vi.spyOn(flags, 'refresh').mockResolvedValue();
+      await render();
+      flags.status.set('ready');
+      fixture.detectChanges();
+
+      refreshButton().click();
+
+      expect(refresh).toHaveBeenCalledWith(true);
+    });
+
+    it('no muestra la fecha de la última actualización si no existe', async () => {
+      await render();
+
+      expect(text()).not.toContain('Última actualización');
+    });
+
+    it('muestra la fecha de la última actualización cuando existe', async () => {
+      await render();
+
+      flags.lastFetch.set(new Date());
+      fixture.detectChanges();
+
+      expect(text()).toContain('Última actualización');
+    });
   });
 
-  it('muestra un spinner en lugar del botón Actualizar mientras carga', async () => {
-    await render();
-    expect(el.querySelector('ion-spinner')).toBeNull();
-    flags.status.set('loading');
-    fixture.detectChanges();
-    expect(el.querySelector('ion-spinner')).not.toBeNull();
-    expect(text()).toContain('Descargando configuración');
+  describe('feature flag categories_enabled', () => {
+    it('muestra ON y su origen por defecto', async () => {
+      await render();
+
+      expect(flagBadge()).toBe('ON');
+      expect(text()).toContain('Origen: ');
+    });
+
+    it('muestra OFF cuando se fuerza apagado', async () => {
+      await render();
+
+      flags.setOverride('categories_enabled', false);
+      fixture.detectChanges();
+
+      expect(flagBadge()).toBe('OFF');
+    });
+
+    it('el selector "OFF" aplica un override local', async () => {
+      await render();
+
+      chooseSegment('off');
+
+      expect(flags.categoriesEnabled()).toBe(false);
+      expect(flags.source('categories_enabled')).toBe('override');
+    });
+
+    it('el selector "ON" aplica un override local', async () => {
+      flags.setOverride('categories_enabled', false);
+      await render();
+
+      chooseSegment('on');
+
+      expect(flags.categoriesEnabled()).toBe(true);
+    });
+
+    it('el selector "Remoto" quita el override local', async () => {
+      flags.setOverride('categories_enabled', false);
+      await render();
+
+      chooseSegment('remote');
+
+      expect(flags.source('categories_enabled')).toBe('default');
+    });
   });
 
-  it('deshabilita Actualizar si Remote Config no está disponible y lo habilita si no', async () => {
-    await render();
-    const refresh = () =>
-      Array.from(el.querySelectorAll('ion-button')).find((b) =>
-        b.textContent?.includes('Actualizar'),
-      ) as HTMLElement & { disabled: boolean };
-    flags.status.set('unavailable');
-    fixture.detectChanges();
-    expect(refresh().disabled).toBe(true);
-    flags.status.set('ready');
-    fixture.detectChanges();
-    expect(refresh().disabled).toBe(false);
-  });
+  describe('prueba de rendimiento', () => {
+    it('muestra el número de tareas almacenadas', async () => {
+      store.addTask('A');
+      store.addTask('B');
 
-  it('Actualizar fuerza una descarga de Remote Config', async () => {
-    const refresh = vi.spyOn(flags, 'refresh').mockResolvedValue();
-    await render();
-    flags.status.set('ready');
-    fixture.detectChanges();
-    (
-      Array.from(el.querySelectorAll('ion-button')).find((b) =>
-        b.textContent?.includes('Actualizar'),
-      ) as HTMLElement
-    ).click();
-    expect(refresh).toHaveBeenCalledWith(true);
-  });
+      await render();
 
-  it('muestra la fecha de la última actualización cuando existe', async () => {
-    await render();
-    expect(text()).not.toContain('Última actualización');
-    flags.lastFetch.set(new Date());
-    fixture.detectChanges();
-    expect(text()).toContain('Última actualización');
-  });
+      expect(item('Tareas almacenadas')?.textContent).toContain('2 en total');
+    });
 
-  it('muestra el estado ON/OFF del flag y su origen', async () => {
-    await render();
-    const badge = () => el.querySelector('ion-badge')?.textContent?.trim();
-    expect(badge()).toBe('ON');
-    expect(text()).toContain('Origen: ');
-    flags.setOverride('categories_enabled', false);
-    fixture.detectChanges();
-    expect(badge()).toBe('OFF');
-  });
+    it('genera 1.000 tareas', async () => {
+      await render();
 
-  it('el selector Remoto/ON/OFF aplica y quita el override local', async () => {
-    await render();
-    const segment = el.querySelector('ion-segment') as HTMLElement & { value: string };
-    const choose = (value: string) =>
-      segment.dispatchEvent(new CustomEvent('ionChange', { detail: { value } }));
+      item('Generar 1.000')!.click();
+      await vi.waitFor(() => expect(toast.present).toHaveBeenCalled());
 
-    choose('off');
-    expect(flags.categoriesEnabled()).toBe(false);
-    expect(flags.source('categories_enabled')).toBe('override');
-    choose('on');
-    expect(flags.categoriesEnabled()).toBe(true);
-    choose('remote');
-    expect(flags.source('categories_enabled')).toBe('default');
-  });
+      expect(store.counts().all).toBe(1000);
+    });
 
-  it('muestra el número de tareas almacenadas', async () => {
-    store.addTask('A');
-    store.addTask('B');
-    await render();
-    expect(item('Tareas almacenadas')?.textContent).toContain('2 en total');
-  });
+    it('avisa con un toast y muestra la última generación', async () => {
+      await render();
 
-  it('genera 1.000 tareas y avisa con un toast', async () => {
-    await render();
-    item('Generar 1.000')!.click();
-    await vi.waitFor(() => expect(toast.present).toHaveBeenCalled());
-    expect(store.counts().all).toBe(1000);
-    expect(toasts.create.mock.calls[0][0].message).toContain('1');
-    fixture.detectChanges();
-    expect(text()).toContain('Última generación');
-  });
+      item('Generar 1.000')!.click();
+      await vi.waitFor(() => expect(toast.present).toHaveBeenCalled());
+      fixture.detectChanges();
 
-  it('genera 10.000 tareas', async () => {
-    await render();
-    item('Generar 10.000')!.click();
-    await vi.waitFor(() => expect(toast.present).toHaveBeenCalled());
-    expect(store.counts().all).toBe(10000);
-  });
+      expect(toasts.create.mock.calls[0][0].message).toContain('1');
+      expect(text()).toContain('Última generación');
+    });
 
-  it('"Eliminar todas" está deshabilitado sin tareas y habilitado con tareas', async () => {
-    await render();
-    expect((item('Eliminar todas') as HTMLElement & { disabled: boolean }).disabled).toBe(true);
-    store.addTask('A');
-    fixture.detectChanges();
-    expect((item('Eliminar todas') as HTMLElement & { disabled: boolean }).disabled).toBe(false);
-  });
+    it('genera 10.000 tareas', async () => {
+      await render();
 
-  it('eliminar todas pide confirmación y vacía la lista al aceptar', async () => {
-    store.addTask('A');
-    await render();
-    item('Eliminar todas')!.click();
-    await vi.waitFor(() => expect(alert.present).toHaveBeenCalled());
-    const { buttons } = alerts.create.mock.calls[0][0];
-    expect(store.counts().all).toBe(1);
-    buttons[1].handler();
-    expect(store.counts().all).toBe(0);
+      item('Generar 10.000')!.click();
+      await vi.waitFor(() => expect(toast.present).toHaveBeenCalled());
+
+      expect(store.counts().all).toBe(10000);
+    });
+
+    it('"Eliminar todas" está deshabilitado sin tareas', async () => {
+      await render();
+
+      expect(deleteAllItem().disabled).toBe(true);
+    });
+
+    it('"Eliminar todas" se habilita cuando hay tareas', async () => {
+      await render();
+
+      store.addTask('A');
+      fixture.detectChanges();
+
+      expect(deleteAllItem().disabled).toBe(false);
+    });
+
+    it('eliminar todas pide confirmación sin borrar nada todavía', async () => {
+      store.addTask('A');
+      await render();
+
+      item('Eliminar todas')!.click();
+      await vi.waitFor(() => expect(alert.present).toHaveBeenCalled());
+
+      expect(store.counts().all).toBe(1);
+    });
+
+    it('al aceptar la confirmación se vacía la lista', async () => {
+      store.addTask('A');
+      await render();
+      item('Eliminar todas')!.click();
+      await vi.waitFor(() => expect(alert.present).toHaveBeenCalled());
+      const { buttons } = alerts.create.mock.calls[0][0];
+
+      buttons[1].handler();
+
+      expect(store.counts().all).toBe(0);
+    });
   });
 });
