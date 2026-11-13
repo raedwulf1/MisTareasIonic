@@ -71,7 +71,7 @@ export function taskRows(page: Page): Locator {
 }
 
 export function taskRow(page: Page, title: string): Locator {
-  return taskRows(page).filter({ has: page.locator('h2.title', { hasText: title }) });
+  return taskRows(page).filter({ has: page.locator('h2.task-item__title', { hasText: title }) });
 }
 
 /** Abre el menú lateral desde la página visible y navega a la opción indicada. */

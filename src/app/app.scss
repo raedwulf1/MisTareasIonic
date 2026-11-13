@@ -1,15 +1,15 @@
-.menu-list ion-item {
+.app-menu__item {
   --border-radius: 8px;
   margin: 4px 8px;
 }
-.menu-list ion-item.selected {
+.app-menu__item--selected {
   --background: rgba(var(--ion-color-primary-rgb), 0.14);
   --color: var(--ion-color-primary);
 }
-.menu-list ion-item.selected ion-icon {
+.app-menu__item--selected .app-menu__icon {
   color: var(--ion-color-primary);
 }
-.menu-footer {
+.app-menu__footer {
   display: block;
   padding: 16px 24px;
   font-size: 12px;

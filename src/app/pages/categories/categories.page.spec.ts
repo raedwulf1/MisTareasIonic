@@ -67,7 +67,7 @@ describe('CategoriesPage', () => {
     for (const c of store.categories()) store.removeCategory(c.id);
     await render();
     expect(rows()).toHaveLength(0);
-    expect(el.querySelector('.empty')?.textContent).toContain('No hay categorías');
+    expect(el.querySelector('.categories-page__empty')?.textContent).toContain('No hay categorías');
   });
 
   it('el botón + abre el editor y crea la categoría devuelta', async () => {

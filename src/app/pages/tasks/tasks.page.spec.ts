@@ -35,7 +35,7 @@ describe('TasksPage', () => {
     chips().find((c) => c.textContent?.includes(label)) as HTMLElement;
   const text = () => el.textContent ?? '';
   const addButton = () =>
-    el.querySelector('ion-button[type="submit"]') as HTMLElement & {
+    el.querySelector('ion-fab-button[type="submit"]') as HTMLElement & {
       disabled: boolean;
     };
 
@@ -75,8 +75,8 @@ describe('TasksPage', () => {
       store.toggleTask(done.id);
       await render();
       expect(el.querySelector('ion-title')?.textContent).toContain('Tareas');
-      expect(el.querySelector('.subtitle')?.textContent).toContain('2 pendientes');
-      expect(el.querySelector('.subtitle')?.textContent).toContain('1 hechas');
+      expect(el.querySelector('.tasks-page__subtitle')?.textContent).toContain('2 pendientes');
+      expect(el.querySelector('.tasks-page__subtitle')?.textContent).toContain('1 hechas');
     });
 
     it('la barra de progreso refleja la proporción de tareas completadas', async () => {
@@ -189,7 +189,7 @@ describe('TasksPage', () => {
     it('oculta chips y selector de categoría cuando el feature flag está apagado', async () => {
       flags.setOverride('categories_enabled', false);
       await render();
-      expect(el.querySelector('.chips-toolbar')).toBeNull();
+      expect(el.querySelector('.tasks-page__chips-toolbar')).toBeNull();
       expect(el.querySelector('ion-select')).toBeNull();
     });
   });
@@ -197,28 +197,32 @@ describe('TasksPage', () => {
   describe('lista', () => {
     it('muestra el mensaje de lista vacía sin tareas', async () => {
       await render();
-      expect(el.querySelector('.empty')?.textContent).toContain('Aún no tienes tareas');
+      expect(el.querySelector('.tasks-page__empty')?.textContent).toContain('Aún no tienes tareas');
     });
 
     it('muestra el mensaje de búsqueda sin resultados', async () => {
       store.addTask('A');
       store.search.set('zzz');
       await render();
-      expect(el.querySelector('.empty')?.textContent).toContain('Ninguna tarea coincide');
+      expect(el.querySelector('.tasks-page__empty')?.textContent).toContain(
+        'Ninguna tarea coincide',
+      );
     });
 
     it('muestra el mensaje de filtro sin resultados', async () => {
       store.addTask('A');
       store.categoryFilter.set('trabajo');
       await render();
-      expect(el.querySelector('.empty')?.textContent).toContain('No hay tareas con este filtro');
+      expect(el.querySelector('.tasks-page__empty')?.textContent).toContain(
+        'No hay tareas con este filtro',
+      );
     });
 
     it('usa el viewport virtual cuando hay tareas', async () => {
       store.addTask('A');
       await render();
       expect(el.querySelector('cdk-virtual-scroll-viewport')).not.toBeNull();
-      expect(el.querySelector('.empty')).toBeNull();
+      expect(el.querySelector('.tasks-page__empty')).toBeNull();
     });
   });
 

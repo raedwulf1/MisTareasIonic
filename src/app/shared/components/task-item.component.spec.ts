@@ -26,28 +26,28 @@ describe('TaskItemComponent', () => {
 
   it('muestra el título de la tarea', () => {
     render();
-    expect(el.querySelector('.title')?.textContent).toContain('Comprar pan');
+    expect(el.querySelector('.task-item__title')?.textContent).toContain('Comprar pan');
   });
 
   it('muestra el nombre y el color de la categoría', () => {
     render({ category: CATEGORY });
-    expect(el.querySelector('.category')?.textContent).toContain('Compras');
-    expect((el.querySelector('.dot') as HTMLElement).style.background).not.toBe('');
+    expect(el.querySelector('.task-item__category')?.textContent).toContain('Compras');
+    expect((el.querySelector('.task-item__dot') as HTMLElement).style.background).not.toBe('');
   });
 
   it('muestra "Sin categoría" cuando no hay categoría', () => {
     render();
-    expect(el.querySelector('.category.muted')?.textContent).toContain('Sin categoría');
+    expect(el.querySelector('.task-item__category--muted')?.textContent).toContain('Sin categoría');
   });
 
   it('oculta la categoría cuando showCategory es false', () => {
     render({ category: CATEGORY, showCategory: false });
-    expect(el.querySelector('.category')).toBeNull();
+    expect(el.querySelector('.task-item__category')).toBeNull();
   });
 
   it('marca la fila como hecha y el checkbox como marcado si está completada', () => {
     render({ task: { ...TASK, completed: true } });
-    expect(el.querySelector('ion-item')?.classList).toContain('done');
+    expect(el.querySelector('ion-item')?.classList).toContain('task-item__item--done');
     expect(el.querySelector('ion-checkbox')?.getAttribute('aria-label')).toBe(
       'Marcar como pendiente',
     );

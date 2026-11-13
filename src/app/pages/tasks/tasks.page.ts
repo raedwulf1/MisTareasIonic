@@ -9,6 +9,7 @@ import { IonButton } from '@ionic/angular/ion-button';
 import { IonButtons } from '@ionic/angular/ion-buttons';
 import { IonChip } from '@ionic/angular/ion-chip';
 import { IonContent } from '@ionic/angular/ion-content';
+import { IonFabButton } from '@ionic/angular/ion-fab-button';
 import { IonFooter } from '@ionic/angular/ion-footer';
 import { IonHeader } from '@ionic/angular/ion-header';
 import { IonIcon } from '@ionic/angular/ion-icon';
@@ -51,6 +52,7 @@ import {
     IonButtons,
     IonChip,
     IonContent,
+    IonFabButton,
     IonFooter,
     IonHeader,
     IonIcon,

@@ -3,31 +3,32 @@
   height: 64px;
   overflow: hidden;
 }
-ion-item {
+.task-item__item {
   --min-height: 64px;
 }
-ion-label {
+.task-item__label {
   cursor: pointer;
 }
-.title {
+.task-item__title {
   overflow: hidden;
   text-overflow: ellipsis;
   transition: opacity 0.15s ease;
 }
-.done .title {
+.task-item__item--done .task-item__title {
   text-decoration: line-through;
   opacity: 0.55;
 }
-.category {
+.task-item__category {
   display: flex;
   align-items: center;
   gap: 6px;
   font-size: 13px;
+
+  &--muted {
+    opacity: 0.6;
+  }
 }
-.muted {
-  opacity: 0.6;
-}
-.dot {
+.task-item__dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;

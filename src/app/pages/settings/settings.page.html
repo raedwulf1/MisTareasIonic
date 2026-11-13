@@ -40,7 +40,10 @@
       <ion-label class="ion-text-wrap">
         <h2>
           <code>categories_enabled</code>
-          <ion-badge [color]="flags.categoriesEnabled() ? 'success' : 'medium'">
+          <ion-badge
+            class="settings-page__badge"
+            [color]="flags.categoriesEnabled() ? 'success' : 'medium'"
+          >
             {{ flags.categoriesEnabled() ? 'ON' : 'OFF' }}
           </ion-badge>
         </h2>
@@ -57,13 +60,17 @@
       </ion-label>
     </ion-item>
     <ion-item>
-      <ion-segment [value]="overrideValue()" (ionChange)="setOverride($event.detail.value)">
+      <ion-segment
+        class="settings-page__segment"
+        [value]="overrideValue()"
+        (ionChange)="setOverride($event.detail.value)"
+      >
         <ion-segment-button value="remote"><ion-label>Remoto</ion-label></ion-segment-button>
         <ion-segment-button value="on"><ion-label>ON</ion-label></ion-segment-button>
         <ion-segment-button value="off"><ion-label>OFF</ion-label></ion-segment-button>
       </ion-segment>
     </ion-item>
-    <ion-note class="note">
+    <ion-note class="settings-page__note">
       «Remoto» usa el valor publicado en la consola de Firebase. «ON»/«OFF» fuerzan el valor solo en
       este dispositivo, para probar sin conexión o en el navegador.
     </ion-note>

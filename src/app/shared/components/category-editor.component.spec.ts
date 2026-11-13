@@ -34,7 +34,7 @@ describe('CategoryEditorComponent', () => {
     fixture.detectChanges();
   }
 
-  const swatches = () => Array.from(el.querySelectorAll<HTMLElement>('.swatch'));
+  const swatches = () => Array.from(el.querySelectorAll<HTMLElement>('.category-editor__swatch'));
 
   beforeEach(() => {
     localStorage.clear();
@@ -57,7 +57,7 @@ describe('CategoryEditorComponent', () => {
     await render({ id: 'x', name: 'Casa', color: CATEGORY_COLORS[3] });
     expect(el.querySelector('ion-title')?.textContent).toContain('Editar');
     expect((el.querySelector('ion-input') as HTMLElement & { value: string }).value).toBe('Casa');
-    expect(swatches()[3].classList).toContain('selected');
+    expect(swatches()[3].classList).toContain('category-editor__swatch--selected');
   });
 
   it('muestra una muestra por cada color disponible', async () => {
@@ -68,7 +68,7 @@ describe('CategoryEditorComponent', () => {
   it('al crear, preselecciona el siguiente color de la paleta', async () => {
     await render();
     // El store trae 3 categorías por defecto → el siguiente color es el índice 3.
-    expect(swatches()[3].classList).toContain('selected');
+    expect(swatches()[3].classList).toContain('category-editor__swatch--selected');
     expect(swatches()[3].getAttribute('aria-checked')).toBe('true');
   });
 
@@ -76,20 +76,22 @@ describe('CategoryEditorComponent', () => {
     await render();
     swatches()[5].click();
     fixture.detectChanges();
-    expect(swatches()[5].classList).toContain('selected');
-    expect(swatches()[3].classList).not.toContain('selected');
+    expect(swatches()[5].classList).toContain('category-editor__swatch--selected');
+    expect(swatches()[3].classList).not.toContain('category-editor__swatch--selected');
   });
 
   it('muestra un error y deshabilita Guardar si el nombre ya existe', async () => {
     await render();
     await typeName('trabajo');
-    expect(el.querySelector('.error')?.textContent).toContain('Ya existe una categoría');
+    expect(el.querySelector('.category-editor__error')?.textContent).toContain(
+      'Ya existe una categoría',
+    );
     expect(button('Guardar').disabled).toBe(true);
   });
 
   it('al editar, su propio nombre no cuenta como duplicado', async () => {
     await render({ id: 'trabajo', name: 'Trabajo', color: CATEGORY_COLORS[1] });
-    expect(el.querySelector('.error')).toBeNull();
+    expect(el.querySelector('.category-editor__error')).toBeNull();
   });
 
   it('guardar devuelve nombre recortado y color con rol "save"', async () => {

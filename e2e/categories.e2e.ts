@@ -35,7 +35,10 @@ test.describe('/categories', () => {
 
     const created = categoriesPage(page).locator('ion-item-sliding', { hasText: 'Salud' });
     await expect(created).toBeVisible();
-    await expect(created.locator('.dot')).toHaveCSS('background-color', 'rgb(235, 68, 90)');
+    await expect(created.locator('.categories-page__dot')).toHaveCSS(
+      'background-color',
+      'rgb(235, 68, 90)',
+    );
 
     // También aparece como filtro en la lista de tareas.
     await page.goto('/tasks');

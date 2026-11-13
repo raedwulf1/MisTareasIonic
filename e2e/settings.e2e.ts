@@ -43,7 +43,7 @@ test.describe('/settings: feature flag categories_enabled', () => {
       .toBe('{"categories_enabled":false}');
 
     await navigateWithMenu(page, settings, 'Tareas');
-    await expect(tasksPage(page).locator('.chips')).toHaveCount(0);
+    await expect(tasksPage(page).locator('.tasks-page__chips')).toHaveCount(0);
 
     await page.goto('/categories');
     await expect(page).toHaveURL(/\/tasks$/);

@@ -11,6 +11,7 @@
 </ion-header>
 <ion-content class="ion-padding">
   <ion-input
+    class="task-editor__input"
     label="Título"
     labelPlacement="stacked"
     fill="outline"
@@ -33,7 +34,7 @@
         @for (c of categories(); track c.id) {
           <ion-item>
             <ion-radio [value]="c.id">
-              <span class="dot" [style.background]="c.color"></span>{{ c.name }}
+              <span class="task-editor__dot" [style.background]="c.color"></span>{{ c.name }}
             </ion-radio>
           </ion-item>
         }

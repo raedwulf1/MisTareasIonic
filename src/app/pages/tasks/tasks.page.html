@@ -5,7 +5,7 @@
     </ion-buttons>
     <ion-title>
       Tareas
-      <span class="subtitle"
+      <span class="tasks-page__subtitle"
         >{{ store.counts().pending | number }} pendientes ·
         {{ store.counts().completed | number }} hechas</span
       >
@@ -19,7 +19,7 @@
         <ion-icon slot="icon-only" name="checkmark-done-circle-outline" />
       </ion-button>
     </ion-buttons>
-    <ion-progress-bar [value]="progress()" />
+    <ion-progress-bar class="tasks-page__progress" [value]="progress()" />
   </ion-toolbar>
 
   <ion-toolbar>
@@ -32,37 +32,48 @@
   </ion-toolbar>
 
   @if (flags.categoriesEnabled()) {
-    <ion-toolbar class="chips-toolbar">
-      <div class="chips" role="tablist" aria-label="Filtrar por categoría">
+    <ion-toolbar class="tasks-page__chips-toolbar">
+      <div class="tasks-page__chips" role="tablist" aria-label="Filtrar por categoría">
         <ion-chip
+          class="tasks-page__chip"
           [outline]="store.categoryFilter() !== 'all'"
           [color]="store.categoryFilter() === 'all' ? 'primary' : 'medium'"
           (click)="setCategoryFilter('all')"
         >
           <ion-label>Todas</ion-label>
-          <ion-badge>{{ store.counts().all }}</ion-badge>
+          <ion-badge class="tasks-page__chip-badge">{{ store.counts().all }}</ion-badge>
         </ion-chip>
         @for (c of store.categories(); track c.id) {
           <ion-chip
+            class="tasks-page__chip"
             [outline]="store.categoryFilter() !== c.id"
             [style.--chip-color]="c.color"
-            [class.active]="store.categoryFilter() === c.id"
+            [class.tasks-page__chip--active]="store.categoryFilter() === c.id"
             (click)="setCategoryFilter(c.id)"
           >
-            <span class="dot" [style.background]="c.color"></span>
+            <span class="tasks-page__dot" [style.background]="c.color"></span>
             <ion-label>{{ c.name }}</ion-label>
-            <ion-badge>{{ store.counts().byCategory.get(c.id) ?? 0 }}</ion-badge>
+            <ion-badge class="tasks-page__chip-badge">{{
+              store.counts().byCategory.get(c.id) ?? 0
+            }}</ion-badge>
           </ion-chip>
         }
         <ion-chip
+          class="tasks-page__chip"
           [outline]="store.categoryFilter() !== 'none'"
           [color]="store.categoryFilter() === 'none' ? 'primary' : 'medium'"
           (click)="setCategoryFilter('none')"
         >
           <ion-label>Sin categoría</ion-label>
-          <ion-badge>{{ store.counts().uncategorized }}</ion-badge>
+          <ion-badge class="tasks-page__chip-badge">{{ store.counts().uncategorized }}</ion-badge>
         </ion-chip>
-        <ion-chip outline color="medium" routerLink="/categories" aria-label="Gestionar categorías">
+        <ion-chip
+          class="tasks-page__chip"
+          outline
+          color="medium"
+          routerLink="/categories"
+          aria-label="Gestionar categorías"
+        >
           <ion-icon name="add" />
           <ion-label>Categoría</ion-label>
         </ion-chip>
@@ -83,7 +94,7 @@
 <ion-content [scrollY]="false">
   @if (store.visibleTasks().length) {
     <cdk-virtual-scroll-viewport
-      class="ion-content-scroll-host"
+      class="tasks-page__viewport ion-content-scroll-host"
       [itemSize]="itemHeight"
       [minBufferPx]="itemHeight * 6"
       [maxBufferPx]="itemHeight * 12"
@@ -99,8 +110,8 @@
       />
     </cdk-virtual-scroll-viewport>
   } @else {
-    <div class="empty">
-      <ion-icon name="sparkles-outline" aria-hidden="true" />
+    <div class="tasks-page__empty">
+      <ion-icon class="tasks-page__empty-icon" name="sparkles-outline" aria-hidden="true" />
       <p>{{ emptyMessage() }}</p>
     </div>
   }
@@ -108,8 +119,9 @@
 
 <ion-footer id="tasks-footer">
   <ion-toolbar>
-    <form class="quick-add" (ngSubmit)="addTask()">
+    <form class="tasks-page__quick-add" (ngSubmit)="addTask()">
       <ion-input
+        class="tasks-page__quick-add-input"
         name="title"
         aria-label="Nueva tarea"
         placeholder="Nueva tarea…"
@@ -121,6 +133,7 @@
       />
       @if (flags.categoriesEnabled()) {
         <ion-select
+          class="tasks-page__quick-add-select"
           name="category"
           aria-label="Categoría de la nueva tarea"
           interface="popover"
@@ -136,14 +149,15 @@
           }
         </ion-select>
       }
-      <ion-button
+      <ion-fab-button
+        class="tasks-page__quick-add-button"
         type="submit"
-        shape="round"
+        size="small"
         [disabled]="!newTitle().trim()"
         aria-label="Agregar tarea"
       >
-        <ion-icon slot="icon-only" name="add-circle" />
-      </ion-button>
+        <ion-icon name="add" />
+      </ion-fab-button>
     </form>
   </ion-toolbar>
 </ion-footer>

@@ -46,7 +46,9 @@ describe('App', () => {
   it('muestra el título del menú y el pie', async () => {
     await render();
     expect(el.querySelector('ion-menu ion-title')?.textContent).toContain('Mis tareas');
-    expect(el.querySelector('.menu-footer')?.textContent).toContain('Ionic + Angular + Cordova');
+    expect(el.querySelector('.app-menu__footer')?.textContent).toContain(
+      'Ionic + Angular + Cordova',
+    );
   });
 
   it('el menú tiene Tareas, Categorías y Ajustes con sus enlaces', async () => {

@@ -1,14 +1,14 @@
-.dot {
+.categories-page__dot {
   width: 14px;
   height: 14px;
   border-radius: 50%;
 }
-.hint {
+.categories-page__hint {
   display: block;
   padding: 8px 16px;
   font-size: 12px;
 }
-.empty {
+.categories-page__empty {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -16,6 +16,6 @@
   text-align: center;
   color: var(--ion-color-medium);
 }
-.empty ion-icon {
+.categories-page__empty-icon {
   font-size: 56px;
 }

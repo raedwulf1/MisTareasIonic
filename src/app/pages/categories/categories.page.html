@@ -13,7 +13,7 @@
       @for (c of store.categories(); track c.id) {
         <ion-item-sliding #sliding>
           <ion-item button detail="false" (click)="edit(c)">
-            <span slot="start" class="dot" [style.background]="c.color"></span>
+            <span slot="start" class="categories-page__dot" [style.background]="c.color"></span>
             <ion-label>
               <h2>{{ c.name }}</h2>
               <p>{{ taskCount(c.id) }} tarea(s)</p>
@@ -38,10 +38,10 @@
         </ion-item-sliding>
       }
     </ion-list>
-    <ion-note class="hint">Toca para editar · desliza para eliminar</ion-note>
+    <ion-note class="categories-page__hint">Toca para editar · desliza para eliminar</ion-note>
   } @else {
-    <div class="empty">
-      <ion-icon name="pricetags-outline" aria-hidden="true" />
+    <div class="categories-page__empty">
+      <ion-icon class="categories-page__empty-icon" name="pricetags-outline" aria-hidden="true" />
       <p>No hay categorías. Crea una con el botón +.</p>
     </div>
   }

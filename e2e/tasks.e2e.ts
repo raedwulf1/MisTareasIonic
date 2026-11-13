@@ -22,7 +22,9 @@ test.describe('/tasks: alta y persistencia', () => {
     await expect(taskRow(page, 'Comprar pan')).toBeVisible();
     await expect(taskRow(page, 'Comprar pan')).toContainText('Sin categoría');
     await expect(input).toHaveValue('');
-    await expect(tasksPage(page).locator('.subtitle')).toContainText('1 pendientes · 0 hechas');
+    await expect(tasksPage(page).locator('.tasks-page__subtitle')).toContainText(
+      '1 pendientes · 0 hechas',
+    );
 
     await expect
       .poll(async () => (await storedTasks(page)).map((t) => t.title))
@@ -77,16 +79,20 @@ test.describe('/tasks: acciones sobre una tarea', () => {
   test('marca y desmarca como completada', async ({ page }) => {
     const row = taskRow(page, 'Pagar luz');
     await row.getByRole('checkbox', { name: 'Marcar como completada' }).click();
-    await expect(row.locator('ion-item')).toHaveClass(/done/);
-    await expect(tasksPage(page).locator('.subtitle')).toContainText('1 pendientes · 1 hechas');
+    await expect(row.locator('ion-item')).toHaveClass(/task-item__item--done/);
+    await expect(tasksPage(page).locator('.tasks-page__subtitle')).toContainText(
+      '1 pendientes · 1 hechas',
+    );
 
     await row.getByRole('checkbox', { name: 'Marcar como pendiente' }).click();
-    await expect(row.locator('ion-item')).not.toHaveClass(/done/);
-    await expect(tasksPage(page).locator('.subtitle')).toContainText('2 pendientes · 0 hechas');
+    await expect(row.locator('ion-item')).not.toHaveClass(/task-item__item--done/);
+    await expect(tasksPage(page).locator('.tasks-page__subtitle')).toContainText(
+      '2 pendientes · 0 hechas',
+    );
   });
 
   test('edita título y categoría desde el modal', async ({ page }) => {
-    await taskRow(page, 'Pagar luz').locator('h2.title').click();
+    await taskRow(page, 'Pagar luz').locator('h2.task-item__title').click();
     const modal = page.locator('ion-modal app-task-editor');
     await expect(modal.locator('ion-title')).toHaveText('Editar tarea');
 
@@ -99,7 +105,7 @@ test.describe('/tasks: acciones sobre una tarea', () => {
   });
 
   test('cancelar el modal no cambia la tarea', async ({ page }) => {
-    await taskRow(page, 'Pagar luz').locator('h2.title').click();
+    await taskRow(page, 'Pagar luz').locator('h2.task-item__title').click();
     const modal = page.locator('ion-modal app-task-editor');
     await modal.getByRole('textbox', { name: 'Título' }).fill('Otro título');
     await modal.getByRole('button', { name: 'Cancelar' }).click();
@@ -120,7 +126,10 @@ test.describe('/tasks: acciones sobre una tarea', () => {
     await toast.getByRole('button', { name: 'Deshacer' }).click();
 
     // Vuelve a su posición original (ordenada por fecha de creación).
-    await expect(taskRows(page).locator('h2.title')).toHaveText(['Pagar luz', 'Enviar informe']);
+    await expect(taskRows(page).locator('h2.task-item__title')).toHaveText([
+      'Pagar luz',
+      'Enviar informe',
+    ]);
   });
 });
 
@@ -138,7 +147,8 @@ test.describe('/tasks: filtros y búsqueda', () => {
     await expect(taskRows(page)).toHaveCount(4);
   });
 
-  const titles = (page: import('@playwright/test').Page) => taskRows(page).locator('h2.title');
+  const titles = (page: import('@playwright/test').Page) =>
+    taskRows(page).locator('h2.task-item__title');
 
   test('filtra por categoría y por "Sin categoría"', async ({ page }) => {
     const chips = tasksPage(page).locator('ion-chip');
@@ -209,9 +219,11 @@ test.describe('/tasks con el flag de categorías apagado', () => {
     });
     await page.goto('/tasks');
 
-    await expect(tasksPage(page).locator('.chips')).toHaveCount(0);
+    await expect(tasksPage(page).locator('.tasks-page__chips')).toHaveCount(0);
     await expect(tasksPage(page).locator('ion-select[name="category"]')).toHaveCount(0);
-    await expect(taskRow(page, 'Tarea con categoría').locator('.category')).toHaveCount(0);
+    await expect(taskRow(page, 'Tarea con categoría').locator('.task-item__category')).toHaveCount(
+      0,
+    );
 
     const input = tasksPage(page).getByRole('textbox', { name: 'Nueva tarea' });
     await input.fill('Sin categoría forzada');

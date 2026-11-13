@@ -106,6 +106,8 @@ test.describe('Enlaces entre pantallas', () => {
       .getByLabel('Ver tareas de esta categoría')
       .click();
     await expect(page).toHaveURL(/\/tasks$/);
-    await expect(tasksPage(page).locator('ion-chip.active')).toContainText('Trabajo');
+    await expect(tasksPage(page).locator('ion-chip.tasks-page__chip--active')).toContainText(
+      'Trabajo',
+    );
   });
 });

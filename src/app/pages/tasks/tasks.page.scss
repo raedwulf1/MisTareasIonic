@@ -1,22 +1,22 @@
-.subtitle {
+.tasks-page__subtitle {
   display: block;
   font-size: 12px;
   font-weight: 400;
   opacity: 0.7;
 }
 
-ion-progress-bar {
+.tasks-page__progress {
   position: absolute;
   bottom: 0;
   left: 0;
   height: 2px;
 }
 
-.chips-toolbar {
+.tasks-page__chips-toolbar {
   --min-height: 48px;
 }
 
-.chips {
+.tasks-page__chips {
   display: flex;
   gap: 4px;
   overflow-x: auto;
@@ -26,37 +26,37 @@ ion-progress-bar {
   &::-webkit-scrollbar {
     display: none;
   }
+}
 
-  ion-chip {
-    flex: none;
-  }
+.tasks-page__chip {
+  flex: none;
 
-  ion-chip.active {
+  &--active {
     --background: color-mix(in srgb, var(--chip-color) 22%, transparent);
     --color: var(--ion-text-color);
     border-color: var(--chip-color);
   }
-
-  ion-badge {
-    margin-left: 6px;
-    --background: rgba(var(--ion-text-color-rgb, 0, 0, 0), 0.12);
-    --color: inherit;
-  }
 }
 
-.dot {
+.tasks-page__chip-badge {
+  margin-left: 6px;
+  --background: rgba(var(--ion-text-color-rgb, 0, 0, 0), 0.12);
+  --color: inherit;
+}
+
+.tasks-page__dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   margin-right: 6px;
 }
 
-cdk-virtual-scroll-viewport {
+.tasks-page__viewport {
   height: 100%;
   width: 100%;
 }
 
-.empty {
+.tasks-page__empty {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -65,24 +65,24 @@ cdk-virtual-scroll-viewport {
   padding: 32px;
   text-align: center;
   color: var(--ion-color-medium);
-
-  ion-icon {
-    font-size: 56px;
-    margin-bottom: 12px;
-  }
 }
 
-.quick-add {
+.tasks-page__empty-icon {
+  font-size: 56px;
+  margin-bottom: 12px;
+}
+
+.tasks-page__quick-add {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 0 8px;
+}
 
-  ion-input {
-    flex: 1;
-  }
+.tasks-page__quick-add-input {
+  flex: 1;
+}
 
-  ion-select {
-    max-width: 40%;
-  }
+.tasks-page__quick-add-select {
+  max-width: 40%;
 }

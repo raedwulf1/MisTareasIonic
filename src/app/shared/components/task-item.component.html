@@ -1,18 +1,20 @@
 <ion-item-sliding #sliding>
-  <ion-item lines="full" [class.done]="task().completed">
+  <ion-item class="task-item__item" lines="full" [class.task-item__item--done]="task().completed">
     <ion-checkbox
       slot="start"
       [checked]="task().completed"
       (ionChange)="toggle.emit(task().id)"
       [attr.aria-label]="task().completed ? 'Marcar como pendiente' : 'Marcar como completada'"
     />
-    <ion-label class="ion-text-nowrap" (click)="edit.emit(task())">
-      <h2 class="title">{{ task().title }}</h2>
+    <ion-label class="task-item__label ion-text-nowrap" (click)="edit.emit(task())">
+      <h2 class="task-item__title">{{ task().title }}</h2>
       @if (showCategory()) {
         @if (category(); as c) {
-          <p class="category"><span class="dot" [style.background]="c.color"></span>{{ c.name }}</p>
+          <p class="task-item__category">
+            <span class="task-item__dot" [style.background]="c.color"></span>{{ c.name }}
+          </p>
         } @else {
-          <p class="category muted">Sin categoría</p>
+          <p class="task-item__category task-item__category--muted">Sin categoría</p>
         }
       }
     </ion-label>

@@ -24,19 +24,19 @@
   />
   @if (error(); as message) {
     <ion-text color="danger"
-      ><p class="error">{{ message }}</p></ion-text
+      ><p class="category-editor__error">{{ message }}</p></ion-text
     >
   }
-  <p class="label">Color</p>
-  <div class="swatches" role="radiogroup" aria-label="Color de la categoría">
+  <p class="category-editor__label">Color</p>
+  <div class="category-editor__swatches" role="radiogroup" aria-label="Color de la categoría">
     @for (c of colors; track c) {
       <button
         type="button"
-        class="swatch"
+        class="category-editor__swatch"
         role="radio"
         [attr.aria-checked]="color() === c"
         [attr.aria-label]="'Color ' + c"
-        [class.selected]="color() === c"
+        [class.category-editor__swatch--selected]="color() === c"
         [style.background]="c"
         (click)="color.set(c)"
       ></button>
