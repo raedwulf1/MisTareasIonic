@@ -3,9 +3,10 @@ import { AlertController } from '@ionic/angular/alert-controller';
 import { Platform } from '@ionic/angular/platform';
 import { ToastController } from '@ionic/angular/toast-controller';
 
-import { FeatureFlagsService } from '../../core/services/feature-flags.service';
-import { TodoStore } from '../../core/services/todo.store';
+import { FeatureFlagsService } from '../../application/feature-flags.service';
+import { TodoStore } from '../../application/todo.store';
 import { SettingsPage } from './settings.page';
+import { provideInfrastructure } from '../../infrastructure/provide-infrastructure';
 
 describe('SettingsPage', () => {
   let fixture: ComponentFixture<SettingsPage>;
@@ -38,6 +39,7 @@ describe('SettingsPage', () => {
     toasts.create.mockResolvedValue(toast);
     TestBed.configureTestingModule({
       providers: [
+        provideInfrastructure(),
         { provide: AlertController, useValue: alerts },
         { provide: ToastController, useValue: toasts },
         { provide: Platform, useValue: { ready: () => Promise.resolve('dom') } },

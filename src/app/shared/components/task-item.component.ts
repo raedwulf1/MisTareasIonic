@@ -9,7 +9,8 @@ import { IonLabel } from '@ionic/angular/ion-label';
 import { addIcons } from 'ionicons';
 import { trashOutline } from 'ionicons/icons';
 
-import { Category, Task } from '../../core/models/todo.models';
+import { Category } from '../../domain/category';
+import { Task } from '../../domain/task';
 
 /** Altura fija de cada fila: el scroll virtual la necesita para calcular qué filas pintar. */
 export const TASK_ITEM_HEIGHT = 64;

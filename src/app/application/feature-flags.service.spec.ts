@@ -3,6 +3,7 @@ import { Platform } from '@ionic/angular/platform';
 import { Subject } from 'rxjs';
 
 import { FeatureFlagsService } from './feature-flags.service';
+import { provideInfrastructure } from '../infrastructure/provide-infrastructure';
 
 /** Simula `window.FirebasexConfig` con los valores publicados en Remote Config. */
 function mockRemoteConfig(remote: Record<string, string>) {
@@ -22,6 +23,7 @@ describe('FeatureFlagsService', () => {
     delete window.FirebasexConfig;
     TestBed.configureTestingModule({
       providers: [
+        provideInfrastructure(),
         {
           provide: Platform,
           useValue: { ready: () => Promise.resolve('cordova'), resume: new Subject<void>() },

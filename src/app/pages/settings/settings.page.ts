@@ -19,8 +19,9 @@ import { IonTitle } from '@ionic/angular/ion-title';
 import { IonToolbar } from '@ionic/angular/ion-toolbar';
 import { ToastController } from '@ionic/angular/toast-controller';
 
-import { FeatureFlagsService, FlagSource } from '../../core/services/feature-flags.service';
-import { TodoStore } from '../../core/services/todo.store';
+import { FeatureFlagsService } from '../../application/feature-flags.service';
+import { FlagSource } from '../../domain/feature-flags';
+import { TodoStore } from '../../application/todo.store';
 
 const SOURCE_LABELS: Record<FlagSource, string> = {
   remote: 'Firebase Remote Config',

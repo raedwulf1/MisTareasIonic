@@ -2,8 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { Platform } from '@ionic/angular/platform';
 
 import { FeatureFlagsService } from './feature-flags.service';
-import { StorageService } from './storage.service';
+import { LocalStorageKeyValueStore } from '../infrastructure/local-storage.key-value-store';
 import { TodoStore } from './todo.store';
+import { provideInfrastructure } from '../infrastructure/provide-infrastructure';
 
 describe('TodoStore', () => {
   let store: TodoStore;
@@ -12,7 +13,10 @@ describe('TodoStore', () => {
   beforeEach(() => {
     localStorage.clear();
     TestBed.configureTestingModule({
-      providers: [{ provide: Platform, useValue: { ready: () => Promise.resolve('dom') } }],
+      providers: [
+        provideInfrastructure(),
+        { provide: Platform, useValue: { ready: () => Promise.resolve('dom') } },
+      ],
     });
     store = TestBed.inject(TodoStore);
     flags = TestBed.inject(FeatureFlagsService);
@@ -88,7 +92,7 @@ describe('TodoStore', () => {
   it('persiste el estado en localStorage', () => {
     store.addTask('Persistida');
     TestBed.tick();
-    TestBed.inject(StorageService).flush();
+    TestBed.inject(LocalStorageKeyValueStore).flush();
     const saved = JSON.parse(localStorage.getItem('todo.tasks.v1')!);
     expect(saved[0].title).toBe('Persistida');
   });

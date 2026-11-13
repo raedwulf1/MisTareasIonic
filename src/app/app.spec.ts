@@ -3,8 +3,9 @@ import { provideRouter } from '@angular/router';
 import { Platform } from '@ionic/angular/platform';
 
 import { App } from './app';
-import { FeatureFlagsService } from './core/services/feature-flags.service';
-import { TodoStore } from './core/services/todo.store';
+import { FeatureFlagsService } from './application/feature-flags.service';
+import { TodoStore } from './application/todo.store';
+import { provideInfrastructure } from './infrastructure/provide-infrastructure';
 
 describe('App', () => {
   let fixture: ComponentFixture<App>;
@@ -27,6 +28,7 @@ describe('App', () => {
     localStorage.clear();
     TestBed.configureTestingModule({
       providers: [
+        provideInfrastructure(),
         provideRouter([]),
         {
           provide: Platform,

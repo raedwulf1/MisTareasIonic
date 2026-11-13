@@ -4,9 +4,10 @@ import { AlertController } from '@ionic/angular/alert-controller';
 import { ModalController } from '@ionic/angular/modal-controller';
 import { Platform } from '@ionic/angular/platform';
 
-import { FeatureFlagsService } from '../../core/services/feature-flags.service';
-import { TodoStore } from '../../core/services/todo.store';
+import { FeatureFlagsService } from '../../application/feature-flags.service';
+import { TodoStore } from '../../application/todo.store';
 import { CategoriesPage } from './categories.page';
+import { provideInfrastructure } from '../../infrastructure/provide-infrastructure';
 
 describe('CategoriesPage', () => {
   let fixture: ComponentFixture<CategoriesPage>;
@@ -37,6 +38,7 @@ describe('CategoriesPage', () => {
     modals.create.mockResolvedValue(modal);
     TestBed.configureTestingModule({
       providers: [
+        provideInfrastructure(),
         { provide: Router, useValue: router },
         { provide: AlertController, useValue: alerts },
         { provide: ModalController, useValue: modals },
