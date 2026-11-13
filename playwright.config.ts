@@ -4,8 +4,6 @@ import { defineConfig, devices } from '@playwright/test';
  * Tests end-to-end (caja negra) de la app en el navegador.
  *
  * Levantan `ng serve` en un puerto propio para no chocar con un `npm start` abierto.
- * No dependen de la estructura interna del código, así que sirven de red de seguridad
- * durante la migración a Clean Architecture (ver docs/plan-clean-architecture.md).
  */
 const PORT = 4321;
 
