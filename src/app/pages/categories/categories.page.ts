@@ -22,9 +22,9 @@ import { ModalController } from '@ionic/angular/modal-controller';
 import { addIcons } from 'ionicons';
 import { add, createOutline, funnelOutline, pricetagsOutline, trashOutline } from 'ionicons/icons';
 
-import { Category } from '../../core/models/todo.models';
-import { FeatureFlagsService } from '../../core/services/feature-flags.service';
-import { TodoStore } from '../../core/services/todo.store';
+import { Category } from '../../domain/category';
+import { FeatureFlagsService } from '../../application/feature-flags.service';
+import { TodoStore } from '../../application/todo.store';
 import {
   CategoryEditorComponent,
   CategoryEditorResult,

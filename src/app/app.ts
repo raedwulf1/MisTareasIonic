@@ -17,8 +17,8 @@ import { IonToolbar } from '@ionic/angular/ion-toolbar';
 import { addIcons } from 'ionicons';
 import { checkmarkDoneOutline, pricetagsOutline, settingsOutline } from 'ionicons/icons';
 
-import { FeatureFlagsService } from './core/services/feature-flags.service';
-import { TodoStore } from './core/services/todo.store';
+import { FeatureFlagsService } from './application/feature-flags.service';
+import { TodoStore } from './application/todo.store';
 
 @Component({
   selector: 'app-root',

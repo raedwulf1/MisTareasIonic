@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { Router, Routes } from '@angular/router';
 
-import { FeatureFlagsService } from './core/services/feature-flags.service';
+import { FeatureFlagsService } from './application/feature-flags.service';
 
 /** Bloquea la gestión de categorías cuando el feature flag está apagado. */
 const categoriesEnabledGuard = () =>

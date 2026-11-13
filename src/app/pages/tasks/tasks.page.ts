@@ -28,9 +28,10 @@ import { ToastController } from '@ionic/angular/toast-controller';
 import { addIcons } from 'ionicons';
 import { add, addCircle, checkmarkDoneCircleOutline, sparklesOutline } from 'ionicons/icons';
 
-import { CategoryFilter, StatusFilter, Task } from '../../core/models/todo.models';
-import { FeatureFlagsService } from '../../core/services/feature-flags.service';
-import { TodoStore } from '../../core/services/todo.store';
+import { FeatureFlagsService } from '../../application/feature-flags.service';
+import { TodoStore } from '../../application/todo.store';
+import { Task } from '../../domain/task';
+import { CategoryFilter, StatusFilter } from '../../domain/task-query';
 import { TASK_ITEM_HEIGHT, TaskItemComponent } from '../../shared/components/task-item.component';
 import {
   TaskEditorComponent,
@@ -107,8 +108,7 @@ export class TasksPage {
   }
 
   protected addTask(): void {
-    const categoryId = this.flags.categoriesEnabled() ? this.newCategoryId() : null;
-    if (this.store.addTask(this.newTitle(), categoryId)) this.newTitle.set('');
+    if (this.store.addTask(this.newTitle(), this.newCategoryId())) this.newTitle.set('');
   }
 
   protected async removeTask(id: string): Promise<void> {
@@ -139,9 +139,7 @@ export class TasksPage {
     });
     await modal.present();
     const { data, role } = await modal.onWillDismiss<TaskEditorResult>();
-    if (role === 'save' && data) {
-      this.store.updateTask(task.id, this.flags.categoriesEnabled() ? data : { title: data.title });
-    }
+    if (role === 'save' && data) this.store.updateTask(task.id, data);
   }
 
   protected async clearCompleted(): Promise<void> {

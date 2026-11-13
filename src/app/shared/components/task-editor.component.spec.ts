@@ -1,7 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ModalController } from '@ionic/angular/modal-controller';
 
-import { Category, Task } from '../../core/models/todo.models';
+import { Category } from '../../domain/category';
+import { Task } from '../../domain/task';
 import { TaskEditorComponent } from './task-editor.component';
 
 const TASK: Task = {
