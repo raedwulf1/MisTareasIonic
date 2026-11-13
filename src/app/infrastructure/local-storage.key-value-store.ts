@@ -1,14 +1,16 @@
 import { Injectable } from '@angular/core';
 
+import { KeyValueStore } from '../application/ports/key-value-store';
+
 /**
  * Persistencia local sobre `localStorage` (disponible en el WebView de Cordova sin plugins).
  *
- * Las escrituras se agrupan (debounce) para que marcar 50 tareas seguidas produzca
- * una sola serialización en lugar de 50. Antes de que la app pase a segundo plano
+ * Las escrituras programadas se agrupan (debounce) para que marcar 50 tareas seguidas
+ * produzca una sola serialización en lugar de 50. Antes de que la app pase a segundo plano
  * (evento `pause` de Cordova) o se cierre la pestaña, se vuelcan las escrituras pendientes.
  */
 @Injectable({ providedIn: 'root' })
-export class StorageService {
+export class LocalStorageKeyValueStore implements KeyValueStore {
   private static readonly WRITE_DELAY_MS = 250;
 
   private readonly pending = new Map<string, () => unknown>();
@@ -29,14 +31,18 @@ export class StorageService {
     }
   }
 
-  /**
-   * Programa una escritura. Recibe una función para que la serialización se haga
-   * una única vez y con el estado más reciente cuando vence el debounce.
-   */
+  write(key: string, value: unknown): void {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+      /* sin almacenamiento disponible: el valor vive solo en memoria */
+    }
+  }
+
   scheduleWrite(key: string, snapshot: () => unknown): void {
     this.pending.set(key, snapshot);
     if (this.timer === null) {
-      this.timer = setTimeout(() => this.flush(), StorageService.WRITE_DELAY_MS);
+      this.timer = setTimeout(() => this.flush(), LocalStorageKeyValueStore.WRITE_DELAY_MS);
     }
   }
 

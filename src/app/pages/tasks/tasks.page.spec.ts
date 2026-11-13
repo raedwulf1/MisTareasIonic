@@ -5,9 +5,10 @@ import { ModalController } from '@ionic/angular/modal-controller';
 import { Platform } from '@ionic/angular/platform';
 import { ToastController } from '@ionic/angular/toast-controller';
 
-import { FeatureFlagsService } from '../../core/services/feature-flags.service';
-import { TodoStore } from '../../core/services/todo.store';
+import { FeatureFlagsService } from '../../application/feature-flags.service';
+import { TodoStore } from '../../application/todo.store';
 import { TasksPage } from './tasks.page';
+import { provideInfrastructure } from '../../infrastructure/provide-infrastructure';
 
 describe('TasksPage', () => {
   let fixture: ComponentFixture<TasksPage>;
@@ -56,6 +57,7 @@ describe('TasksPage', () => {
     modals.create.mockResolvedValue(modal);
     TestBed.configureTestingModule({
       providers: [
+        provideInfrastructure(),
         provideRouter([]),
         { provide: AlertController, useValue: alerts },
         { provide: ToastController, useValue: toasts },

@@ -2,8 +2,9 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ModalController } from '@ionic/angular/modal-controller';
 import { Platform } from '@ionic/angular/platform';
 
-import { CATEGORY_COLORS, Category } from '../../core/models/todo.models';
+import { CATEGORY_COLORS, Category } from '../../domain/category';
 import { CategoryEditorComponent } from './category-editor.component';
+import { provideInfrastructure } from '../../infrastructure/provide-infrastructure';
 
 describe('CategoryEditorComponent', () => {
   let fixture: ComponentFixture<CategoryEditorComponent>;
@@ -41,6 +42,7 @@ describe('CategoryEditorComponent', () => {
     modal.dismiss.mockClear();
     TestBed.configureTestingModule({
       providers: [
+        provideInfrastructure(),
         { provide: ModalController, useValue: modal },
         { provide: Platform, useValue: { ready: () => Promise.resolve('dom') } },
       ],

@@ -14,7 +14,8 @@ import { IonTitle } from '@ionic/angular/ion-title';
 import { IonToolbar } from '@ionic/angular/ion-toolbar';
 import { ModalController } from '@ionic/angular/modal-controller';
 
-import { Category, Task } from '../../core/models/todo.models';
+import { Category } from '../../domain/category';
+import { Task } from '../../domain/task';
 
 export interface TaskEditorResult {
   title: string;

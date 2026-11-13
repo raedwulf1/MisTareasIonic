@@ -18,8 +18,8 @@ import { IonTitle } from '@ionic/angular/ion-title';
 import { IonToolbar } from '@ionic/angular/ion-toolbar';
 import { ModalController } from '@ionic/angular/modal-controller';
 
-import { CATEGORY_COLORS, Category } from '../../core/models/todo.models';
-import { TodoStore } from '../../core/services/todo.store';
+import { CATEGORY_COLORS, Category } from '../../domain/category';
+import { TodoStore } from '../../application/todo.store';
 
 export interface CategoryEditorResult {
   name: string;
@@ -66,7 +66,7 @@ export class CategoryEditorComponent implements OnInit {
       this.name.set(category.name);
       this.color.set(category.color);
     } else {
-      this.color.set(CATEGORY_COLORS[this.store.categories().length % CATEGORY_COLORS.length]);
+      this.color.set(this.store.nextCategoryColor());
     }
   }
 

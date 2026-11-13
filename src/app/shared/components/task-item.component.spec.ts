@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { Category, Task } from '../../core/models/todo.models';
+import { Category } from '../../domain/category';
+import { Task } from '../../domain/task';
 import { TaskItemComponent } from './task-item.component';
 
 const TASK: Task = {
