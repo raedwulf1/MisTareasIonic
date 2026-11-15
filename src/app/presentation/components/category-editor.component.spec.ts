@@ -1,0 +1,150 @@
+import { firstValueFrom } from 'rxjs';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ModalController } from '@ionic/angular/modal-controller';
+import { Platform } from '@ionic/angular/platform';
+
+import { CATEGORY_COLORS, Category } from '../../domain/entities/category';
+import { CategoryEditorComponent } from './category-editor.component';
+import { TodoStore } from '../state/todo.store';
+import { provideData } from '../../data/provide-data';
+
+describe('CategoryEditorComponent', () => {
+  let fixture: ComponentFixture<CategoryEditorComponent>;
+  let el: HTMLElement;
+  const modal = { dismiss: vi.fn() };
+
+  async function render(category: Category | null = null): Promise<void> {
+    fixture = TestBed.createComponent(CategoryEditorComponent);
+    fixture.componentRef.setInput('category', category);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    el = fixture.nativeElement;
+  }
+
+  function button(text: string): HTMLElement & { disabled: boolean } {
+    return Array.from(el.querySelectorAll('ion-button')).find((b) =>
+      b.textContent?.includes(text),
+    ) as HTMLElement & { disabled: boolean };
+  }
+
+  async function typeName(value: string): Promise<void> {
+    const input = el.querySelector('ion-input') as HTMLElement & { value: string };
+    input.value = value;
+    input.dispatchEvent(new CustomEvent('ionInput', { detail: { value } }));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+  }
+
+  const swatches = () => Array.from(el.querySelectorAll<HTMLElement>('.category-editor__swatch'));
+
+  beforeEach(async () => {
+    localStorage.clear();
+    modal.dismiss.mockClear();
+    TestBed.configureTestingModule({
+      providers: [
+        provideData(),
+        { provide: ModalController, useValue: modal },
+        { provide: Platform, useValue: { ready: () => Promise.resolve('dom') } },
+      ],
+    });
+    await firstValueFrom(TestBed.inject(TodoStore).load());
+  });
+
+  it('en modo creación muestra el título "Nueva"', async () => {
+    await render();
+
+    expect(el.querySelector('ion-title')?.textContent).toContain('Nueva');
+  });
+
+  it('en modo creación Guardar está deshabilitado', async () => {
+    await render();
+
+    expect(button('Guardar').disabled).toBe(true);
+  });
+
+  it('en modo edición muestra "Editar" con el nombre y el color de la categoría', async () => {
+    await render({ id: 'x', name: 'Casa', color: CATEGORY_COLORS[3] });
+
+    expect(el.querySelector('ion-title')?.textContent).toContain('Editar');
+    expect((el.querySelector('ion-input') as HTMLElement & { value: string }).value).toBe('Casa');
+    expect(swatches()[3].classList).toContain('category-editor__swatch--selected');
+  });
+
+  it('muestra una muestra por cada color disponible', async () => {
+    await render();
+
+    expect(swatches()).toHaveLength(CATEGORY_COLORS.length);
+  });
+
+  it('al crear, preselecciona el siguiente color de la paleta', async () => {
+    await render();
+
+    expect(swatches()[3].classList).toContain('category-editor__swatch--selected');
+    expect(swatches()[3].getAttribute('aria-checked')).toBe('true');
+  });
+
+  it('tocar una muestra cambia el color seleccionado', async () => {
+    await render();
+
+    swatches()[5].click();
+    fixture.detectChanges();
+
+    expect(swatches()[5].classList).toContain('category-editor__swatch--selected');
+    expect(swatches()[3].classList).not.toContain('category-editor__swatch--selected');
+  });
+
+  it('muestra un error si el nombre ya existe', async () => {
+    await render();
+
+    await typeName('trabajo');
+
+    expect(el.querySelector('.category-editor__error')?.textContent).toContain(
+      'Ya existe una categoría',
+    );
+  });
+
+  it('deshabilita Guardar si el nombre ya existe', async () => {
+    await render();
+
+    await typeName('trabajo');
+
+    expect(button('Guardar').disabled).toBe(true);
+  });
+
+  it('al editar, su propio nombre no cuenta como duplicado', async () => {
+    await render({ id: 'trabajo', name: 'Trabajo', color: CATEGORY_COLORS[1] });
+
+    expect(el.querySelector('.category-editor__error')).toBeNull();
+  });
+
+  it('guardar devuelve nombre recortado y color con rol "save"', async () => {
+    await render();
+    await typeName('  Gimnasio ');
+    swatches()[2].click();
+
+    button('Guardar').click();
+
+    expect(modal.dismiss).toHaveBeenCalledWith(
+      { name: 'Gimnasio', color: CATEGORY_COLORS[2] },
+      'save',
+    );
+  });
+
+  it('guardar con nombre vacío no cierra el modal', async () => {
+    await render();
+
+    fixture.componentInstance.save();
+
+    expect(modal.dismiss).not.toHaveBeenCalled();
+  });
+
+  it('cancelar cierra el modal con rol "cancel"', async () => {
+    await render();
+
+    button('Cancelar').click();
+
+    expect(modal.dismiss).toHaveBeenCalledWith(null, 'cancel');
+  });
+});

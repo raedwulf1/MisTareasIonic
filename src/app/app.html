@@ -22,9 +22,9 @@
               aria-hidden="true"
             />
             <ion-label>Tareas</ion-label>
-            <ion-badge slot="end" color="medium">{{ store.counts().pending }}</ion-badge>
+            <ion-badge slot="end" color="medium">{{ shell.pendingTasks() }}</ion-badge>
           </ion-item>
-          @if (flags.categoriesEnabled()) {
+          @if (shell.categoriesEnabled()) {
             <ion-item
               class="app-menu__item"
               routerLink="/categories"
@@ -39,7 +39,7 @@
                 aria-hidden="true"
               />
               <ion-label>Categorías</ion-label>
-              <ion-badge slot="end" color="medium">{{ store.categories().length }}</ion-badge>
+              <ion-badge slot="end" color="medium">{{ shell.categoryCount() }}</ion-badge>
             </ion-item>
           }
           <ion-item

@@ -1,0 +1,163 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button />
+    </ion-buttons>
+    <ion-title>
+      Tareas
+      <span class="tasks-page__subtitle"
+        >{{ tasks.counts().pending | number }} pendientes ·
+        {{ tasks.counts().completed | number }} hechas</span
+      >
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button
+        (click)="clearCompleted()"
+        [disabled]="!tasks.counts().completed"
+        aria-label="Eliminar tareas completadas"
+      >
+        <ion-icon slot="icon-only" name="checkmark-done-circle-outline" />
+      </ion-button>
+    </ion-buttons>
+    <ion-progress-bar class="tasks-page__progress" [value]="progress()" />
+  </ion-toolbar>
+
+  <ion-toolbar>
+    <ion-searchbar
+      placeholder="Buscar tareas"
+      [debounce]="250"
+      [value]="tasks.search()"
+      (ionInput)="tasks.setSearch($event.detail.value ?? '')"
+    />
+  </ion-toolbar>
+
+  @if (tasks.categoriesEnabled()) {
+    <ion-toolbar class="tasks-page__chips-toolbar">
+      <div class="tasks-page__chips" role="tablist" aria-label="Filtrar por categoría">
+        <ion-chip
+          class="tasks-page__chip"
+          [outline]="tasks.categoryFilter() !== 'all'"
+          [color]="tasks.categoryFilter() === 'all' ? 'primary' : 'medium'"
+          (click)="setCategoryFilter('all')"
+        >
+          <ion-label>Todas</ion-label>
+          <ion-badge class="tasks-page__chip-badge">{{ tasks.counts().all }}</ion-badge>
+        </ion-chip>
+        @for (c of tasks.categories(); track c.id) {
+          <ion-chip
+            class="tasks-page__chip"
+            [outline]="tasks.categoryFilter() !== c.id"
+            [style.--chip-color]="c.color"
+            [class.tasks-page__chip--active]="tasks.categoryFilter() === c.id"
+            (click)="setCategoryFilter(c.id)"
+          >
+            <span class="tasks-page__dot" [style.background]="c.color"></span>
+            <ion-label>{{ c.name }}</ion-label>
+            <ion-badge class="tasks-page__chip-badge">{{
+              tasks.counts().byCategory.get(c.id) ?? 0
+            }}</ion-badge>
+          </ion-chip>
+        }
+        <ion-chip
+          class="tasks-page__chip"
+          [outline]="tasks.categoryFilter() !== 'none'"
+          [color]="tasks.categoryFilter() === 'none' ? 'primary' : 'medium'"
+          (click)="setCategoryFilter('none')"
+        >
+          <ion-label>Sin categoría</ion-label>
+          <ion-badge class="tasks-page__chip-badge">{{ tasks.counts().uncategorized }}</ion-badge>
+        </ion-chip>
+        <ion-chip
+          class="tasks-page__chip"
+          outline
+          color="medium"
+          routerLink="/categories"
+          aria-label="Gestionar categorías"
+        >
+          <ion-icon name="add" />
+          <ion-label>Categoría</ion-label>
+        </ion-chip>
+      </div>
+    </ion-toolbar>
+  }
+
+  <ion-toolbar>
+    <ion-segment [value]="tasks.statusFilter()" (ionChange)="setStatusFilter($event.detail.value)">
+      <ion-segment-button value="all"><ion-label>Todas</ion-label></ion-segment-button>
+      <ion-segment-button value="pending"><ion-label>Pendientes</ion-label></ion-segment-button>
+      <ion-segment-button value="completed"><ion-label>Hechas</ion-label></ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<!-- El scroll lo gestiona el viewport virtual: solo existen en el DOM las filas visibles. -->
+<ion-content [scrollY]="false">
+  @if (tasks.visibleTasks().length) {
+    <cdk-virtual-scroll-viewport
+      class="tasks-page__viewport ion-content-scroll-host"
+      [itemSize]="itemHeight"
+      [minBufferPx]="itemHeight * 6"
+      [maxBufferPx]="itemHeight * 12"
+    >
+      <app-task-item
+        *cdkVirtualFor="let task of tasks.visibleTasks(); trackBy: trackById; templateCacheSize: 30"
+        [task]="task"
+        [category]="task.categoryId ? tasks.categoryById().get(task.categoryId) : undefined"
+        [showCategory]="tasks.categoriesEnabled()"
+        (toggle)="tasks.toggleTask($event)"
+        (remove)="removeTask($event)"
+        (edit)="editTask($event)"
+      />
+    </cdk-virtual-scroll-viewport>
+  } @else {
+    <div class="tasks-page__empty">
+      <ion-icon class="tasks-page__empty-icon" name="sparkles-outline" aria-hidden="true" />
+      <p>{{ emptyMessage() }}</p>
+    </div>
+  }
+</ion-content>
+
+<ion-footer id="tasks-footer">
+  <ion-toolbar>
+    <form class="tasks-page__quick-add" (ngSubmit)="addTask()">
+      <ion-input
+        class="tasks-page__quick-add-input"
+        name="title"
+        aria-label="Nueva tarea"
+        placeholder="Nueva tarea…"
+        enterkeyhint="done"
+        [maxlength]="200"
+        [ngModel]="newTitle()"
+        (ngModelChange)="newTitle.set($event ?? '')"
+        (keyup.enter)="addTask()"
+      />
+      @if (tasks.categoriesEnabled()) {
+        <ion-select
+          class="tasks-page__quick-add-select"
+          name="category"
+          aria-label="Categoría de la nueva tarea"
+          interface="popover"
+          placeholder="Categoría"
+          [value]="newCategoryId() ?? 'none'"
+          (ionChange)="
+            newCategoryId.set($event.detail.value === 'none' ? null : $event.detail.value)
+          "
+        >
+          <ion-select-option value="none">Sin categoría</ion-select-option>
+          @for (c of tasks.categories(); track c.id) {
+            <ion-select-option [value]="c.id">{{ c.name }}</ion-select-option>
+          }
+        </ion-select>
+      }
+      <ion-fab-button
+        class="tasks-page__quick-add-button"
+        type="submit"
+        size="small"
+        [disabled]="!newTitle().trim()"
+        aria-label="Agregar tarea"
+      >
+        <ion-icon name="add" />
+      </ion-fab-button>
+    </form>
+  </ion-toolbar>
+</ion-footer>
