@@ -51,6 +51,6 @@ export class App {
   constructor() {
     addIcons({ checkmarkDoneOutline, pricetagsOutline, settingsOutline });
     // Remote Config se consulta después del primer render para no retrasar la carga inicial.
-    afterNextRender(() => void this.flags.init());
+    afterNextRender(() => this.flags.init().subscribe());
   }
 }

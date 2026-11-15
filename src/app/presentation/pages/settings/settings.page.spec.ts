@@ -1,3 +1,4 @@
+import { firstValueFrom, of } from 'rxjs';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AlertController } from '@ionic/angular/alert-controller';
 import { Platform } from '@ionic/angular/platform';
@@ -46,7 +47,7 @@ describe('SettingsPage', () => {
       ],
     });
     store = TestBed.inject(TodoStore);
-    await store.load();
+    await firstValueFrom(store.load());
     flags = TestBed.inject(FeatureFlagsService);
   });
 
@@ -139,7 +140,7 @@ describe('SettingsPage', () => {
     });
 
     it('Actualizar fuerza una descarga de Remote Config', async () => {
-      const refresh = vi.spyOn(flags, 'refresh').mockResolvedValue();
+      const refresh = vi.spyOn(flags, 'refresh').mockReturnValue(of(undefined));
       await render();
       flags.status.set('ready');
       fixture.detectChanges();

@@ -1,3 +1,4 @@
+import { firstValueFrom } from 'rxjs';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { AlertController } from '@ionic/angular/alert-controller';
@@ -65,7 +66,7 @@ describe('TasksPage', () => {
       ],
     });
     store = TestBed.inject(TodoStore);
-    await store.load();
+    await firstValueFrom(store.load());
     flags = TestBed.inject(FeatureFlagsService);
   });
 

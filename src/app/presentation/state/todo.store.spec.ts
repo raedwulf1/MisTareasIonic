@@ -1,3 +1,4 @@
+import { firstValueFrom } from 'rxjs';
 import { TestBed } from '@angular/core/testing';
 import { Platform } from '@ionic/angular/platform';
 
@@ -26,7 +27,7 @@ describe('TodoStore', () => {
       ],
     });
     store = TestBed.inject(TodoStore);
-    await store.load();
+    await firstValueFrom(store.load());
     flags = TestBed.inject(FeatureFlagsService);
   });
 

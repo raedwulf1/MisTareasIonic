@@ -1,22 +1,21 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
+import { Observable, forkJoin, map, tap } from 'rxjs';
 
 import {
   Category,
   CategoryChanges,
-  applyCategoryChanges,
   isCategoryNameTaken,
   nextCategoryColor,
 } from '../../domain/entities/category';
+import { createAppError } from '../../domain/entities/app-error';
+import { ErrorReporter } from '../../domain/ports/error-reporter';
 import { createId } from '../../domain/rules/id';
 import {
   Task,
   TaskChanges,
-  applyTaskChanges,
   buildDemoTasks,
-  createTask,
   insertByCreationDate,
   toggleCompleted,
-  unassignCategory,
 } from '../../domain/entities/task';
 import {
   CategoryFilter,
@@ -29,6 +28,11 @@ import {
 import { FeatureFlagsService } from './feature-flags.service';
 import { CategoryRepository } from '../../domain/repositories/category.repository';
 import { TaskRepository } from '../../domain/repositories/task.repository';
+import { AddCategoryUseCase } from '../../domain/usecases/add-category.usecase';
+import { AddTaskUseCase } from '../../domain/usecases/add-task.usecase';
+import { RemoveCategoryUseCase } from '../../domain/usecases/remove-category.usecase';
+import { UpdateCategoryUseCase } from '../../domain/usecases/update-category.usecase';
+import { UpdateTaskUseCase } from '../../domain/usecases/update-task.usecase';
 
 /**
  * Estado de la app (tareas, categorías y filtros) y sus casos de uso, basado en signals.
@@ -48,6 +52,16 @@ export class TodoStore {
   private readonly taskRepository = inject(TaskRepository);
   private readonly categoryRepository = inject(CategoryRepository);
   private readonly flags = inject(FeatureFlagsService);
+  private readonly errors = inject(ErrorReporter);
+
+  private readonly addTaskUseCase = new AddTaskUseCase(this.taskRepository);
+  private readonly updateTaskUseCase = new UpdateTaskUseCase(this.taskRepository);
+  private readonly addCategoryUseCase = new AddCategoryUseCase(this.categoryRepository);
+  private readonly updateCategoryUseCase = new UpdateCategoryUseCase(this.categoryRepository);
+  private readonly removeCategoryUseCase = new RemoveCategoryUseCase(
+    this.categoryRepository,
+    this.taskRepository,
+  );
 
   private readonly _tasks = signal<readonly Task[]>([]);
   private readonly _categories = signal<readonly Category[]>([]);
@@ -93,39 +107,46 @@ export class TodoStore {
   }
 
   /** Carga tareas y categorías desde los repositorios. Se llama al arrancar la app. */
-  async load(): Promise<void> {
-    const [tasks, categories] = await Promise.all([
-      this.taskRepository.getAll(),
-      this.categoryRepository.getAll(),
-    ]);
-    this._tasks.set(tasks);
-    this._categories.set(categories);
+  load(): Observable<void> {
+    return forkJoin([this.taskRepository.getAll(), this.categoryRepository.getAll()]).pipe(
+      tap(([tasks, categories]) => {
+        this._tasks.set(tasks);
+        this._categories.set(categories);
+      }),
+      map(() => undefined),
+    );
   }
 
   // ---------- Tareas ----------
 
   /**
    * Crea una tarea. La categoría se descarta si no existe o si las categorías están
-   * desactivadas por feature flag.
+   * desactivadas por feature flag (política en `AddTaskUseCase`).
    */
   addTask(title: string, categoryId: string | null = null): Task | null {
-    const task = createTask({
-      id: createId(),
+    const { task, saved } = this.addTaskUseCase.execute({
       title,
-      categoryId: this.assignableCategoryId(categoryId),
-      createdAt: Date.now(),
+      categoryId,
+      categories: this._categories(),
+      categoriesEnabled: this.flags.categoriesEnabled(),
     });
     if (!task) return null;
     // Las tareas nuevas van primero: así la lista ya está ordenada y no hay que ordenar en cada render.
     this._tasks.update((tasks) => [task, ...tasks]);
-    this.persist(this.taskRepository.add(task));
+    this.persist(saved);
     return task;
   }
 
-  /** Con las categorías desactivadas por feature flag, la categoría de la tarea no se modifica. */
+  /** Con las categorías desactivadas por feature flag, la categoría no se modifica (`UpdateTaskUseCase`). */
   updateTask(id: string, changes: TaskChanges): void {
-    const allowed = this.flags.categoriesEnabled() ? changes : withoutCategory(changes);
-    this.replaceTask(id, (t) => applyTaskChanges(t, allowed));
+    const { tasks, saved } = this.updateTaskUseCase.execute({
+      tasks: this._tasks(),
+      id,
+      changes,
+      categoriesEnabled: this.flags.categoriesEnabled(),
+    });
+    this._tasks.set(tasks);
+    this.persist(saved);
   }
 
   toggleTask(id: string): void {
@@ -169,37 +190,36 @@ export class TodoStore {
   // ---------- Categorías ----------
 
   addCategory(name: string, color?: string): Category | null {
-    const clean = name.trim();
-    if (!clean || this.categoryNameExists(clean)) return null;
-    const category: Category = {
-      id: createId(),
-      name: clean,
-      color: color ?? this.nextCategoryColor(),
-    };
+    const { category, saved } = this.addCategoryUseCase.execute({
+      name,
+      color,
+      categories: this._categories(),
+    });
+    if (!category) return null;
     this._categories.update((list) => [...list, category]);
-    this.persist(this.categoryRepository.add(category));
+    this.persist(saved);
     return category;
   }
 
+  /** Devuelve `false` si el cambio se rechazó (nombre vacío o repetido). */
   updateCategory(id: string, changes: CategoryChanges): boolean {
-    const name = changes.name?.trim();
-    if (name !== undefined && (!name || this.categoryNameExists(name, id))) return false;
-    this._categories.update((list) =>
-      list.map((c) => (c.id === id ? applyCategoryChanges(c, changes) : c)),
-    );
-    const updated = this._categories().find((c) => c.id === id);
-    if (updated) this.persist(this.categoryRepository.update(updated));
+    const { accepted, categories, saved } = this.updateCategoryUseCase.execute({
+      categories: this._categories(),
+      id,
+      changes,
+    });
+    if (!accepted) return false;
+    this._categories.set(categories);
+    this.persist(saved);
     return true;
   }
 
   /** Elimina la categoría; sus tareas no se borran, quedan "Sin categoría". */
   removeCategory(id: string): void {
+    const { tasks, saved } = this.removeCategoryUseCase.execute({ id, tasks: this._tasks() });
     this._categories.update((list) => list.filter((c) => c.id !== id));
-    this.persist(this.categoryRepository.remove(id));
-    const before = this._tasks();
-    this._tasks.update((tasks) => unassignCategory(tasks, id));
-    // `unassignCategory` devuelve el mismo array si no hay nada que cambiar.
-    if (this._tasks() !== before) this.persist(this.taskRepository.replaceAll(this._tasks()));
+    this._tasks.set(tasks);
+    this.persist(saved);
   }
 
   categoryNameExists(name: string, ignoreId?: string): boolean {
@@ -214,16 +234,10 @@ export class TodoStore {
   }
 
   /** La UI ya está actualizada: un fallo al guardar se registra pero no revierte el estado. */
-  private persist(operation: Promise<void>): void {
-    operation.catch((err) => console.error('[repository] No se pudo guardar el cambio', err));
+  private persist(operation: Observable<void>): void {
+    operation.subscribe({
+      error: (err) =>
+        this.errors.report(createAppError('repository', 'No se pudo guardar el cambio', err)),
+    });
   }
-
-  private assignableCategoryId(categoryId: string | null): string | null {
-    if (!this.flags.categoriesEnabled() || !categoryId) return null;
-    return this.categoryById().has(categoryId) ? categoryId : null;
-  }
-}
-
-function withoutCategory({ categoryId: _ignored, ...rest }: TaskChanges): TaskChanges {
-  return rest;
 }

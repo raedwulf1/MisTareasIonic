@@ -1,5 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 
+import { createAppError } from '../../domain/entities/app-error';
+import { ErrorReporter } from '../../domain/ports/error-reporter';
 import { KeyValueStore } from '../../domain/ports/key-value-store';
 
 /**
@@ -13,6 +15,7 @@ import { KeyValueStore } from '../../domain/ports/key-value-store';
 export class LocalStorageKeyValueStore implements KeyValueStore {
   private static readonly WRITE_DELAY_MS = 250;
 
+  private readonly reporter = inject(ErrorReporter);
   private readonly pending = new Map<string, () => unknown>();
   private timer: ReturnType<typeof setTimeout> | null = null;
 
@@ -55,7 +58,7 @@ export class LocalStorageKeyValueStore implements KeyValueStore {
       try {
         localStorage.setItem(key, JSON.stringify(snapshot()));
       } catch (err) {
-        console.error(`[storage] No se pudo guardar "${key}"`, err);
+        this.reporter.report(createAppError('storage', `No se pudo guardar "${key}"`, err));
       }
     }
     this.pending.clear();

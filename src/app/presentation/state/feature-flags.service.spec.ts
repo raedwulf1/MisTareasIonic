@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { Platform } from '@ionic/angular/platform';
-import { Subject } from 'rxjs';
+import { Subject, firstValueFrom } from 'rxjs';
 
 import { FeatureFlagsService } from './feature-flags.service';
 import { provideData } from '../../data/provide-data';
@@ -35,7 +35,7 @@ describe('FeatureFlagsService', () => {
   it('usa el valor por defecto si no hay plugin nativo', async () => {
     const flags = TestBed.inject(FeatureFlagsService);
 
-    await flags.init();
+    await firstValueFrom(flags.init());
 
     expect(flags.status()).toBe('unavailable');
     expect(flags.categoriesEnabled()).toBe(true);
@@ -45,9 +45,9 @@ describe('FeatureFlagsService', () => {
   it('aplica el valor de Remote Config', async () => {
     mockRemoteConfig({ categories_enabled: 'false' });
     const flags = TestBed.inject(FeatureFlagsService);
-    await flags.init();
+    await firstValueFrom(flags.init());
 
-    await flags.refresh();
+    await firstValueFrom(flags.refresh());
 
     expect(flags.categoriesEnabled()).toBe(false);
     expect(flags.source('categories_enabled')).toBe('remote');
@@ -57,7 +57,7 @@ describe('FeatureFlagsService', () => {
   it('el override local tiene prioridad sobre Remote Config', async () => {
     mockRemoteConfig({ categories_enabled: 'false' });
     const flags = TestBed.inject(FeatureFlagsService);
-    await flags.init();
+    await firstValueFrom(flags.init());
 
     flags.setOverride('categories_enabled', true);
 
@@ -67,7 +67,7 @@ describe('FeatureFlagsService', () => {
   it('al quitar el override local se vuelve al valor de Remote Config', async () => {
     mockRemoteConfig({ categories_enabled: 'false' });
     const flags = TestBed.inject(FeatureFlagsService);
-    await flags.init();
+    await firstValueFrom(flags.init());
     flags.setOverride('categories_enabled', true);
 
     flags.setOverride('categories_enabled', null);

@@ -1,8 +1,8 @@
 /**
  * Puerto de persistencia local clave → valor (JSON).
  *
- * La capa de presentación (stores) depende de esta abstracción; la implementación concreta
- * (`localStorage`) se registra en la raíz de composición (`app.config.ts`).
+ * La usan los repositorios locales de `data/`; la implementación concreta (`localStorage`)
+ * se registra en `provideData()`.
  */
 export abstract class KeyValueStore {
   /** Valor guardado, o `fallback` si no existe o no se puede leer. */

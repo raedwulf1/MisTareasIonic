@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Platform } from '@ionic/angular/platform';
+import { Observable, defer, from, map, switchMap } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { RemoteConfigGateway } from '../../domain/ports/remote-config.gateway';
@@ -28,7 +29,7 @@ declare global {
 /**
  * Adaptador de Firebase Remote Config vía `cordova-plugin-firebasex-config`.
  *
- * Convierte la API de callbacks del plugin en promesas y encapsula el ciclo de vida
+ * Convierte la API de callbacks del plugin en observables fríos (nada se ejecuta hasta suscribirse) y encapsula el ciclo de vida
  * de la plataforma (Ionic `Platform`) y los ajustes de descarga del `environment`.
  * El plugin se busca en cada llamada porque Cordova lo inyecta en `window` en tiempo de ejecución.
  */
@@ -36,36 +37,44 @@ declare global {
 export class FirebasexRemoteConfigGateway implements RemoteConfigGateway {
   private readonly platform = inject(Platform);
 
-  async whenReady(): Promise<void> {
-    await this.platform.ready();
+  whenReady(): Observable<void> {
+    return defer(() => from(this.platform.ready())).pipe(map(() => undefined));
   }
 
   isAvailable(): boolean {
     return window.FirebasexConfig !== undefined;
   }
 
-  async configure(defaults: Readonly<Record<string, unknown>>): Promise<void> {
-    const api = this.api();
-    const { fetchTimeoutSec, minimumFetchIntervalSec } = environment.remoteConfig;
-    await call<void>((ok, err) =>
-      api.setConfigSettings(fetchTimeoutSec, minimumFetchIntervalSec, ok, err),
-    );
-    await call<void>((ok, err) => api.setDefaults({ ...defaults }, ok, err));
+  configure(defaults: Readonly<Record<string, unknown>>): Observable<void> {
+    return defer(() => {
+      const api = this.api();
+      const { fetchTimeoutSec, minimumFetchIntervalSec } = environment.remoteConfig;
+      return call<void>((ok, err) =>
+        api.setConfigSettings(fetchTimeoutSec, minimumFetchIntervalSec, ok, err),
+      ).pipe(
+        switchMap(() => call<void>((ok, err) => api.setDefaults({ ...defaults }, ok, err))),
+        map(() => undefined),
+      );
+    });
   }
 
-  async fetchAndActivate(force: boolean): Promise<void> {
-    const api = this.api();
-    if (force) {
-      await call<void>((ok, err) => api.fetch(0, ok, err));
-      await call<boolean>((ok, err) => api.activateFetched(ok, err));
-    } else {
-      await call<boolean>((ok, err) => api.fetchAndActivate(ok, err));
-    }
+  fetchAndActivate(force: boolean): Observable<void> {
+    return defer(() => {
+      const api = this.api();
+      const activated = force
+        ? call<void>((ok, err) => api.fetch(0, ok, err)).pipe(
+            switchMap(() => call<boolean>((ok, err) => api.activateFetched(ok, err))),
+          )
+        : call<boolean>((ok, err) => api.fetchAndActivate(ok, err));
+      return activated.pipe(map(() => undefined));
+    });
   }
 
-  getActiveValues(): Promise<Record<string, unknown>> {
-    const api = this.api();
-    return call<Record<string, unknown>>((ok, err) => api.getAll(ok, err));
+  getActiveValues(): Observable<Record<string, unknown>> {
+    return defer(() => {
+      const api = this.api();
+      return call<Record<string, unknown>>((ok, err) => api.getAll(ok, err));
+    });
   }
 
   onResume(callback: () => void): void {
@@ -79,6 +88,14 @@ export class FirebasexRemoteConfigGateway implements RemoteConfigGateway {
   }
 }
 
-function call<T>(fn: (ok: (value: T) => void, err: (e: unknown) => void) => void): Promise<T> {
-  return new Promise<T>((resolve, reject) => fn(resolve, reject));
+function call<T>(fn: (ok: (value: T) => void, err: (e: unknown) => void) => void): Observable<T> {
+  return new Observable<T>((subscriber) => {
+    fn(
+      (value) => {
+        subscriber.next(value);
+        subscriber.complete();
+      },
+      (e) => subscriber.error(e),
+    );
+  });
 }

@@ -57,6 +57,11 @@ const SOURCE_LABELS: Record<FlagSource, string> = {
 })
 export class SettingsPage {
   protected readonly flags = inject(FeatureFlagsService);
+
+  /** Fuerza una descarga de Remote Config (ignora el intervalo mínimo de caché). */
+  protected refresh(): void {
+    this.flags.refresh(true).subscribe();
+  }
   protected readonly store = inject(TodoStore);
   private readonly alerts = inject(AlertController);
   private readonly toasts = inject(ToastController);

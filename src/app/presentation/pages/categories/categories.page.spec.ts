@@ -1,3 +1,4 @@
+import { firstValueFrom } from 'rxjs';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { AlertController } from '@ionic/angular/alert-controller';
@@ -46,7 +47,7 @@ describe('CategoriesPage', () => {
       ],
     });
     store = TestBed.inject(TodoStore);
-    await store.load();
+    await firstValueFrom(store.load());
     flags = TestBed.inject(FeatureFlagsService);
   });
 

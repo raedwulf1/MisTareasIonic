@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { Observable, defer, of } from 'rxjs';
 
 import { Task, insertByCreationDate } from '../../domain/entities/task';
 import { KeyValueStore } from '../../domain/ports/key-value-store';
@@ -19,44 +20,52 @@ export class LocalTaskRepository implements TaskRepository {
   private readonly storage = inject(KeyValueStore);
   private cache: readonly Task[] | null = null;
 
-  async getAll(): Promise<readonly Task[]> {
-    return this.current();
+  getAll(): Observable<readonly Task[]> {
+    return defer(() => of(this.current()));
   }
 
-  async add(task: Task): Promise<void> {
-    this.commit([task, ...this.current()]);
+  add(task: Task): Observable<void> {
+    return this.mutate(() => [task, ...this.current()]);
   }
 
-  async addMany(tasks: readonly Task[]): Promise<void> {
-    this.commit([...tasks, ...this.current()]);
+  addMany(tasks: readonly Task[]): Observable<void> {
+    return this.mutate(() => [...tasks, ...this.current()]);
   }
 
-  async restore(task: Task): Promise<void> {
-    this.commit(insertByCreationDate(this.current(), task));
+  restore(task: Task): Observable<void> {
+    return this.mutate(() => insertByCreationDate(this.current(), task));
   }
 
-  async update(task: Task): Promise<void> {
-    this.commit(this.current().map((t) => (t.id === task.id ? task : t)));
+  update(task: Task): Observable<void> {
+    return this.mutate(() => this.current().map((t) => (t.id === task.id ? task : t)));
   }
 
-  async remove(id: string): Promise<void> {
-    this.commit(this.current().filter((t) => t.id !== id));
+  remove(id: string): Observable<void> {
+    return this.mutate(() => this.current().filter((t) => t.id !== id));
   }
 
-  async removeCompleted(): Promise<void> {
-    this.commit(this.current().filter((t) => !t.completed));
+  removeCompleted(): Observable<void> {
+    return this.mutate(() => this.current().filter((t) => !t.completed));
   }
 
-  async clear(): Promise<void> {
-    this.commit([]);
+  clear(): Observable<void> {
+    return this.mutate(() => []);
   }
 
-  async replaceAll(tasks: readonly Task[]): Promise<void> {
-    this.commit(tasks);
+  replaceAll(tasks: readonly Task[]): Observable<void> {
+    return this.mutate(() => tasks);
   }
 
   private current(): readonly Task[] {
     return (this.cache ??= this.storage.read<Task[]>(TASKS_KEY, []));
+  }
+
+  /** Observable frío: el cambio se calcula y se aplica al suscribirse, no al llamar al método. */
+  private mutate(next: () => readonly Task[]): Observable<void> {
+    return defer(() => {
+      this.commit(next());
+      return of(undefined);
+    });
   }
 
   private commit(next: readonly Task[]): void {

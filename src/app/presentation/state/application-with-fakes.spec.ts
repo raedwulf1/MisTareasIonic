@@ -1,79 +1,116 @@
+import { Observable, defer, firstValueFrom, of, throwError } from 'rxjs';
+import { AppError } from '../../domain/entities/app-error';
+import { ErrorReporter } from '../../domain/ports/error-reporter';
 import { TestBed } from '@angular/core/testing';
 
 import { FeatureFlagsService } from './feature-flags.service';
-import { KeyValueStore } from '../../domain/ports/key-value-store';
 import { Category, defaultCategories } from '../../domain/entities/category';
 import { Task, insertByCreationDate } from '../../domain/entities/task';
 import { RemoteConfigGateway } from '../../domain/ports/remote-config.gateway';
+import { FlagValues } from '../../domain/entities/feature-flags';
+import { FlagOverridesRepository } from '../../domain/repositories/flag-overrides.repository';
 import { CategoryRepository } from '../../domain/repositories/category.repository';
 import { TaskRepository } from '../../domain/repositories/task.repository';
 import { TodoStore } from './todo.store';
 
-/** Persistencia en memoria: sustituye a `localStorage` sin tocar el código de aplicación. */
-class InMemoryKeyValueStore extends KeyValueStore {
-  readonly data = new Map<string, unknown>();
-  private readonly pending = new Map<string, () => unknown>();
-
-  read<T>(key: string, fallback: T): T {
-    return this.data.has(key) ? (this.data.get(key) as T) : fallback;
-  }
-  write(key: string, value: unknown): void {
-    this.data.set(key, value);
-  }
-  scheduleWrite(key: string, snapshot: () => unknown): void {
-    this.pending.set(key, snapshot);
-  }
-  flush(): void {
-    for (const [key, snapshot] of this.pending) this.data.set(key, snapshot());
-    this.pending.clear();
-  }
-}
-
 /** Repositorio de tareas en memoria: sustituye a la persistencia sin tocar el store. */
 class InMemoryTaskRepository extends TaskRepository {
   tasks: readonly Task[] = [];
-  async getAll() {
-    return this.tasks;
+  getAll() {
+    return defer(() => of(this.tasks));
   }
-  async add(task: Task) {
-    this.tasks = [task, ...this.tasks];
+  add(task: Task) {
+    return defer(() => {
+      this.tasks = [task, ...this.tasks];
+      return of(undefined);
+    });
   }
-  async addMany(tasks: readonly Task[]) {
-    this.tasks = [...tasks, ...this.tasks];
+  addMany(tasks: readonly Task[]) {
+    return defer(() => {
+      this.tasks = [...tasks, ...this.tasks];
+      return of(undefined);
+    });
   }
-  async restore(task: Task) {
-    this.tasks = insertByCreationDate(this.tasks, task);
+  restore(task: Task) {
+    return defer(() => {
+      this.tasks = insertByCreationDate(this.tasks, task);
+      return of(undefined);
+    });
   }
-  async update(task: Task) {
-    this.tasks = this.tasks.map((t) => (t.id === task.id ? task : t));
+  update(task: Task) {
+    return defer(() => {
+      this.tasks = this.tasks.map((t) => (t.id === task.id ? task : t));
+      return of(undefined);
+    });
   }
-  async remove(id: string) {
-    this.tasks = this.tasks.filter((t) => t.id !== id);
+  remove(id: string) {
+    return defer(() => {
+      this.tasks = this.tasks.filter((t) => t.id !== id);
+      return of(undefined);
+    });
   }
-  async removeCompleted() {
-    this.tasks = this.tasks.filter((t) => !t.completed);
+  removeCompleted() {
+    return defer(() => {
+      this.tasks = this.tasks.filter((t) => !t.completed);
+      return of(undefined);
+    });
   }
-  async clear() {
-    this.tasks = [];
+  clear() {
+    return defer(() => {
+      this.tasks = [];
+      return of(undefined);
+    });
   }
-  async replaceAll(tasks: readonly Task[]) {
-    this.tasks = tasks;
+  replaceAll(tasks: readonly Task[]) {
+    return defer(() => {
+      this.tasks = tasks;
+      return of(undefined);
+    });
+  }
+}
+
+class InMemoryFlagOverridesRepository extends FlagOverridesRepository {
+  overrides: FlagValues = {};
+  get() {
+    return defer(() => of(this.overrides));
+  }
+  save(overrides: FlagValues) {
+    return defer(() => {
+      this.overrides = overrides;
+      return of(undefined);
+    });
   }
 }
 
 class InMemoryCategoryRepository extends CategoryRepository {
   categories: readonly Category[] = defaultCategories();
-  async getAll() {
-    return this.categories;
+  getAll() {
+    return defer(() => of(this.categories));
   }
-  async add(category: Category) {
-    this.categories = [...this.categories, category];
+  add(category: Category) {
+    return defer(() => {
+      this.categories = [...this.categories, category];
+      return of(undefined);
+    });
   }
-  async update(category: Category) {
-    this.categories = this.categories.map((c) => (c.id === category.id ? category : c));
+  update(category: Category) {
+    return defer(() => {
+      this.categories = this.categories.map((c) => (c.id === category.id ? category : c));
+      return of(undefined);
+    });
   }
-  async remove(id: string) {
-    this.categories = this.categories.filter((c) => c.id !== id);
+  remove(id: string) {
+    return defer(() => {
+      this.categories = this.categories.filter((c) => c.id !== id);
+      return of(undefined);
+    });
+  }
+}
+
+class RecordingErrorReporter extends ErrorReporter {
+  readonly reported: AppError[] = [];
+  report(error: AppError): void {
+    this.reported.push(error);
   }
 }
 
@@ -84,21 +121,21 @@ class FakeRemoteConfig extends RemoteConfigGateway {
   readonly fetches: boolean[] = [];
   private resume?: () => void;
 
-  whenReady(): Promise<void> {
-    return Promise.resolve();
+  whenReady(): Observable<void> {
+    return of(undefined);
   }
   isAvailable(): boolean {
     return this.available;
   }
-  configure(): Promise<void> {
-    return Promise.resolve();
+  configure(): Observable<void> {
+    return of(undefined);
   }
-  fetchAndActivate(force: boolean): Promise<void> {
+  fetchAndActivate(force: boolean): Observable<void> {
     this.fetches.push(force);
-    return this.fetchError ? Promise.reject(this.fetchError) : Promise.resolve();
+    return this.fetchError ? throwError(() => this.fetchError) : of(undefined);
   }
-  getActiveValues(): Promise<Record<string, unknown>> {
-    return Promise.resolve(this.values);
+  getActiveValues(): Observable<Record<string, unknown>> {
+    return of(this.values);
   }
   onResume(callback: () => void): void {
     this.resume = callback;
@@ -109,20 +146,23 @@ class FakeRemoteConfig extends RemoteConfigGateway {
 }
 
 describe('Capa de aplicación con puertos falsos', () => {
-  let storage: InMemoryKeyValueStore;
+  let overridesRepo: InMemoryFlagOverridesRepository;
   let remote: FakeRemoteConfig;
+  let errors: RecordingErrorReporter;
   let taskRepo: InMemoryTaskRepository;
   let categoryRepo: InMemoryCategoryRepository;
 
   beforeEach(() => {
-    storage = new InMemoryKeyValueStore();
+    overridesRepo = new InMemoryFlagOverridesRepository();
     remote = new FakeRemoteConfig();
+    errors = new RecordingErrorReporter();
     taskRepo = new InMemoryTaskRepository();
     categoryRepo = new InMemoryCategoryRepository();
     TestBed.configureTestingModule({
       providers: [
-        { provide: KeyValueStore, useValue: storage },
+        { provide: FlagOverridesRepository, useValue: overridesRepo },
         { provide: RemoteConfigGateway, useValue: remote },
+        { provide: ErrorReporter, useValue: errors },
         { provide: TaskRepository, useValue: taskRepo },
         { provide: CategoryRepository, useValue: categoryRepo },
       ],
@@ -133,9 +173,9 @@ describe('Capa de aplicación con puertos falsos', () => {
     it('aplica los valores remotos', async () => {
       remote.values = { categories_enabled: 'false' };
       const flags = TestBed.inject(FeatureFlagsService);
-      await flags.init();
+      await firstValueFrom(flags.init());
 
-      await flags.refresh();
+      await firstValueFrom(flags.refresh());
 
       expect(flags.categoriesEnabled()).toBe(false);
       expect(flags.status()).toBe('ready');
@@ -144,60 +184,72 @@ describe('Capa de aplicación con puertos falsos', () => {
     it('vuelve a consultar los valores remotos al reanudar la app', async () => {
       remote.values = { categories_enabled: 'false' };
       const flags = TestBed.inject(FeatureFlagsService);
-      await flags.init();
-      await flags.refresh();
+      await firstValueFrom(flags.init());
+      await firstValueFrom(flags.refresh());
       remote.values = { categories_enabled: 'true' };
 
       remote.triggerResume();
-      await flags.refresh();
+      await firstValueFrom(flags.refresh());
 
       expect(flags.categoriesEnabled()).toBe(true);
+    });
+
+    it('carga los overrides guardados', async () => {
+      overridesRepo.overrides = { categories_enabled: false };
+      const flags = TestBed.inject(FeatureFlagsService);
+
+      await firstValueFrom(flags.loadOverrides());
+
+      expect(flags.categoriesEnabled()).toBe(false);
+      expect(flags.source('categories_enabled')).toBe('override');
     });
 
     it('refresh(true) fuerza la descarga ignorando la caché', async () => {
       const flags = TestBed.inject(FeatureFlagsService);
 
-      await flags.refresh(true);
+      await firstValueFrom(flags.refresh(true));
 
       expect(remote.fetches).toEqual([true]);
     });
 
     it('si la descarga falla conserva los valores y expone el error', async () => {
-      vi.spyOn(console, 'warn').mockImplementation(() => undefined);
       remote.fetchError = 'sin red';
       const flags = TestBed.inject(FeatureFlagsService);
 
-      await flags.refresh();
+      await firstValueFrom(flags.refresh());
 
       expect(flags.status()).toBe('error');
       expect(flags.lastError()).toBe('sin red');
+      expect(errors.reported).toEqual([
+        expect.objectContaining({ source: 'remote-config', severity: 'warning', cause: 'sin red' }),
+      ]);
       expect(flags.categoriesEnabled()).toBe(true);
     });
 
     it('sin proveedor remoto queda "unavailable" y refresh no hace nada', async () => {
       remote.available = false;
       const flags = TestBed.inject(FeatureFlagsService);
-      await flags.init();
+      await firstValueFrom(flags.init());
 
-      await flags.refresh();
+      await firstValueFrom(flags.refresh());
 
       expect(flags.status()).toBe('unavailable');
       expect(remote.fetches).toEqual([]);
     });
 
-    it('los overrides se persisten de inmediato a través del puerto', () => {
+    it('los overrides se guardan de inmediato a través del repositorio', () => {
       const flags = TestBed.inject(FeatureFlagsService);
 
       flags.setOverride('categories_enabled', false);
 
-      expect(storage.data.get('todo.flagOverrides.v1')).toEqual({ categories_enabled: false });
+      expect(overridesRepo.overrides).toEqual({ categories_enabled: false });
     });
   });
 
   describe('TodoStore', () => {
     it('guarda los cambios a través de los repositorios', async () => {
       const store = TestBed.inject(TodoStore);
-      await store.load();
+      await firstValueFrom(store.load());
 
       const task = store.addTask('Persistida')!;
       store.toggleTask(task.id);
@@ -209,16 +261,18 @@ describe('Capa de aplicación con puertos falsos', () => {
     });
 
     it('carga el estado inicial desde los repositorios', async () => {
-      await taskRepo.add({
-        id: 't',
-        title: 'Guardada',
-        completed: false,
-        categoryId: null,
-        createdAt: 1,
-      });
+      await firstValueFrom(
+        taskRepo.add({
+          id: 't',
+          title: 'Guardada',
+          completed: false,
+          categoryId: null,
+          createdAt: 1,
+        }),
+      );
       const store = TestBed.inject(TodoStore);
 
-      await store.load();
+      await firstValueFrom(store.load());
 
       expect(store.tasks().map((t) => t.title)).toEqual(['Guardada']);
       expect(store.categories()).toHaveLength(3);
@@ -226,7 +280,7 @@ describe('Capa de aplicación con puertos falsos', () => {
 
     it('al eliminar una categoría guarda sus tareas sin categoría', async () => {
       const store = TestBed.inject(TodoStore);
-      await store.load();
+      await firstValueFrom(store.load());
       store.addTask('A', 'trabajo');
 
       store.removeCategory('trabajo');
@@ -238,7 +292,7 @@ describe('Capa de aplicación con puertos falsos', () => {
 
     it('con las categorías desactivadas, las tareas nuevas se crean sin categoría', async () => {
       const store = TestBed.inject(TodoStore);
-      await store.load();
+      await firstValueFrom(store.load());
       TestBed.inject(FeatureFlagsService).setOverride('categories_enabled', false);
 
       const task = store.addTask('A', 'trabajo')!;
@@ -248,7 +302,7 @@ describe('Capa de aplicación con puertos falsos', () => {
 
     it('con las categorías desactivadas, editar no cambia la categoría de la tarea', async () => {
       const store = TestBed.inject(TodoStore);
-      await store.load();
+      await firstValueFrom(store.load());
       const task = store.addTask('A', 'compras')!;
       TestBed.inject(FeatureFlagsService).setOverride('categories_enabled', false);
 
@@ -259,7 +313,7 @@ describe('Capa de aplicación con puertos falsos', () => {
 
     it('con las categorías activas, editar sí cambia la categoría', async () => {
       const store = TestBed.inject(TodoStore);
-      await store.load();
+      await firstValueFrom(store.load());
       const task = store.addTask('A', 'compras')!;
 
       store.updateTask(task.id, { categoryId: null });
@@ -269,7 +323,7 @@ describe('Capa de aplicación con puertos falsos', () => {
 
     it('propone el siguiente color de la paleta para una categoría nueva', async () => {
       const store = TestBed.inject(TodoStore);
-      await store.load();
+      await firstValueFrom(store.load());
       const proposed = store.nextCategoryColor();
 
       const category = store.addCategory('Estudio')!;
@@ -280,7 +334,7 @@ describe('Capa de aplicación con puertos falsos', () => {
 
     it('si se elimina la categoría filtrada, el filtro vuelve a "Todas"', async () => {
       const store = TestBed.inject(TodoStore);
-      await store.load();
+      await firstValueFrom(store.load());
       store.categoryFilter.set('trabajo');
 
       store.removeCategory('trabajo');

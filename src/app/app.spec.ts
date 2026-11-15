@@ -1,3 +1,4 @@
+import { firstValueFrom, of } from 'rxjs';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { Platform } from '@ionic/angular/platform';
@@ -42,7 +43,7 @@ describe('App', () => {
       ],
     });
     store = TestBed.inject(TodoStore);
-    await store.load();
+    await firstValueFrom(store.load());
     flags = TestBed.inject(FeatureFlagsService);
   });
 
@@ -93,7 +94,7 @@ describe('App', () => {
   });
 
   it('inicializa Remote Config tras el primer render', async () => {
-    const init = vi.spyOn(flags, 'init').mockResolvedValue();
+    const init = vi.spyOn(flags, 'init').mockReturnValue(of(undefined));
 
     await render();
 

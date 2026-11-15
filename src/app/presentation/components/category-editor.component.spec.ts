@@ -1,3 +1,4 @@
+import { firstValueFrom } from 'rxjs';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ModalController } from '@ionic/angular/modal-controller';
 import { Platform } from '@ionic/angular/platform';
@@ -48,7 +49,7 @@ describe('CategoryEditorComponent', () => {
         { provide: Platform, useValue: { ready: () => Promise.resolve('dom') } },
       ],
     });
-    await TestBed.inject(TodoStore).load();
+    await firstValueFrom(TestBed.inject(TodoStore).load());
   });
 
   it('en modo creación muestra el título "Nueva"', async () => {
