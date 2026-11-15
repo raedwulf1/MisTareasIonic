@@ -3,6 +3,8 @@ import { Platform } from '@ionic/angular/platform';
 import { Observable, defer, from, map, switchMap } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
+import { FlagValues } from '../../domain/entities/feature-flags';
+import { RemoteFlagsMapper } from '../mappers/remote-flags.mapper';
 import { RemoteConfigGateway } from '../../domain/ports/remote-config.gateway';
 
 /** API de `cordova-plugin-firebasex-config` (expuesta como `window.FirebasexConfig`). */
@@ -70,11 +72,11 @@ export class FirebasexRemoteConfigGateway implements RemoteConfigGateway {
     });
   }
 
-  getActiveValues(): Observable<Record<string, unknown>> {
+  getActiveValues(): Observable<FlagValues> {
     return defer(() => {
       const api = this.api();
       return call<Record<string, unknown>>((ok, err) => api.getAll(ok, err));
-    });
+    }).pipe(map((raw) => RemoteFlagsMapper.toDomain(raw)));
   }
 
   onResume(callback: () => void): void {

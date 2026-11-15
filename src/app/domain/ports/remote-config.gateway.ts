@@ -1,5 +1,7 @@
 import { Observable } from 'rxjs';
 
+import { FlagValues } from '../entities/feature-flags';
+
 /**
  * Puerto hacia el proveedor de configuración remota (Firebase Remote Config en Cordova).
  *
@@ -19,8 +21,8 @@ export abstract class RemoteConfigGateway {
   /** Descarga y activa la configuración. `force` ignora el intervalo mínimo de caché. */
   abstract fetchAndActivate(force: boolean): Observable<void>;
 
-  /** Valores activos en crudo, tal como los devuelve el proveedor. */
-  abstract getActiveValues(): Observable<Record<string, unknown>>;
+  /** Flags activos ya convertidos a valores tipados (la conversión vive en la capa `data`). */
+  abstract getActiveValues(): Observable<FlagValues>;
 
   /** Registra un callback para cuando la app vuelve del segundo plano. */
   abstract onResume(callback: () => void): void;

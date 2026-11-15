@@ -4,6 +4,7 @@ import { Observable, defer, of } from 'rxjs';
 import { Category, defaultCategories } from '../../domain/entities/category';
 import { KeyValueStore } from '../../domain/ports/key-value-store';
 import { CategoryRepository } from '../../domain/repositories/category.repository';
+import { CategoryMapper } from '../mappers/category.mapper';
 
 /** Clave del formato persistido (no cambiar: rompería los datos guardados). */
 export const CATEGORIES_KEY = 'todo.categories.v1';
@@ -36,7 +37,9 @@ export class LocalCategoryRepository implements CategoryRepository {
   }
 
   private current(): readonly Category[] {
-    return (this.cache ??= this.storage.read<Category[]>(CATEGORIES_KEY, defaultCategories()));
+    return (this.cache ??=
+      CategoryMapper.toDomainList(this.storage.read<unknown>(CATEGORIES_KEY, null)) ??
+      defaultCategories());
   }
 
   /** Observable frío: el cambio se calcula y se aplica al suscribirse, no al llamar al método. */
@@ -49,6 +52,6 @@ export class LocalCategoryRepository implements CategoryRepository {
 
   private commit(next: readonly Category[]): void {
     this.cache = next;
-    this.storage.scheduleWrite(CATEGORIES_KEY, () => this.cache);
+    this.storage.scheduleWrite(CATEGORIES_KEY, () => CategoryMapper.toDtoList(this.cache ?? []));
   }
 }

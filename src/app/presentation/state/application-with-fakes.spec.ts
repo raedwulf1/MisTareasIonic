@@ -116,7 +116,7 @@ class RecordingErrorReporter extends ErrorReporter {
 
 class FakeRemoteConfig extends RemoteConfigGateway {
   available = true;
-  values: Record<string, unknown> = {};
+  values: FlagValues = {};
   fetchError: unknown = null;
   readonly fetches: boolean[] = [];
   private resume?: () => void;
@@ -134,7 +134,7 @@ class FakeRemoteConfig extends RemoteConfigGateway {
     this.fetches.push(force);
     return this.fetchError ? throwError(() => this.fetchError) : of(undefined);
   }
-  getActiveValues(): Observable<Record<string, unknown>> {
+  getActiveValues(): Observable<FlagValues> {
     return of(this.values);
   }
   onResume(callback: () => void): void {
@@ -171,7 +171,7 @@ describe('Capa de aplicación con puertos falsos', () => {
 
   describe('FeatureFlagsService', () => {
     it('aplica los valores remotos', async () => {
-      remote.values = { categories_enabled: 'false' };
+      remote.values = { categories_enabled: false };
       const flags = TestBed.inject(FeatureFlagsService);
       await firstValueFrom(flags.init());
 
@@ -182,11 +182,11 @@ describe('Capa de aplicación con puertos falsos', () => {
     });
 
     it('vuelve a consultar los valores remotos al reanudar la app', async () => {
-      remote.values = { categories_enabled: 'false' };
+      remote.values = { categories_enabled: false };
       const flags = TestBed.inject(FeatureFlagsService);
       await firstValueFrom(flags.init());
       await firstValueFrom(flags.refresh());
-      remote.values = { categories_enabled: 'true' };
+      remote.values = { categories_enabled: true };
 
       remote.triggerResume();
       await firstValueFrom(flags.refresh());

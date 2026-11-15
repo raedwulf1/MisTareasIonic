@@ -118,6 +118,24 @@ describe('Repositorios locales', () => {
     });
   });
 
+  describe('datos guardados dañados', () => {
+    it('las tareas ignoran los registros inválidos', async () => {
+      storage.data.set(TASKS_KEY, [task('a', 1), { id: 5 }, null]);
+
+      const tasks = await firstValueFrom(TestBed.inject(LocalTaskRepository).getAll());
+
+      expect(tasks.map((t) => t.id)).toEqual(['a']);
+    });
+
+    it('las categorías vuelven a las de por defecto si lo guardado no es una lista', async () => {
+      storage.data.set(CATEGORIES_KEY, 'basura');
+
+      const categories = await firstValueFrom(TestBed.inject(LocalCategoryRepository).getAll());
+
+      expect(categories.map((c) => c.id)).toEqual(['personal', 'trabajo', 'compras']);
+    });
+  });
+
   describe('LocalCategoryRepository', () => {
     it('sin datos guardados devuelve las categorías por defecto', async () => {
       const categories = await firstValueFrom(TestBed.inject(LocalCategoryRepository).getAll());

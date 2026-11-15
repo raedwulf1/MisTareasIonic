@@ -4,6 +4,7 @@ import { Observable, defer, of } from 'rxjs';
 import { Task, insertByCreationDate } from '../../domain/entities/task';
 import { KeyValueStore } from '../../domain/ports/key-value-store';
 import { TaskRepository } from '../../domain/repositories/task.repository';
+import { TaskMapper } from '../mappers/task.mapper';
 
 /** Clave del formato persistido (no cambiar: rompería los datos guardados). */
 export const TASKS_KEY = 'todo.tasks.v1';
@@ -57,7 +58,7 @@ export class LocalTaskRepository implements TaskRepository {
   }
 
   private current(): readonly Task[] {
-    return (this.cache ??= this.storage.read<Task[]>(TASKS_KEY, []));
+    return (this.cache ??= TaskMapper.toDomainList(this.storage.read<unknown>(TASKS_KEY, [])));
   }
 
   /** Observable frío: el cambio se calcula y se aplica al suscribirse, no al llamar al método. */
@@ -70,6 +71,6 @@ export class LocalTaskRepository implements TaskRepository {
 
   private commit(next: readonly Task[]): void {
     this.cache = next;
-    this.storage.scheduleWrite(TASKS_KEY, () => this.cache);
+    this.storage.scheduleWrite(TASKS_KEY, () => TaskMapper.toDtoList(this.cache ?? []));
   }
 }

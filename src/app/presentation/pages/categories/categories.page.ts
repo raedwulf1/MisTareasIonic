@@ -23,8 +23,7 @@ import { addIcons } from 'ionicons';
 import { add, createOutline, funnelOutline, pricetagsOutline, trashOutline } from 'ionicons/icons';
 
 import { Category } from '../../../domain/entities/category';
-import { FeatureFlagsService } from '../../state/feature-flags.service';
-import { TodoStore } from '../../state/todo.store';
+import { CategoriesInteractor } from '../../interactors/categories.interactor';
 import {
   CategoryEditorComponent,
   CategoryEditorResult,
@@ -56,8 +55,7 @@ import {
   styleUrl: './categories.page.scss',
 })
 export class CategoriesPage {
-  protected readonly store = inject(TodoStore);
-  private readonly flags = inject(FeatureFlagsService);
+  protected readonly categories = inject(CategoriesInteractor);
   private readonly modals = inject(ModalController);
   private readonly alerts = inject(AlertController);
   private readonly router = inject(Router);
@@ -66,23 +64,23 @@ export class CategoriesPage {
     addIcons({ add, createOutline, funnelOutline, pricetagsOutline, trashOutline });
     // Si Remote Config apaga la funcionalidad mientras estamos aquí, volver a la lista.
     effect(() => {
-      if (!this.flags.categoriesEnabled())
+      if (!this.categories.categoriesEnabled())
         void this.router.navigateByUrl('/tasks', { replaceUrl: true });
     });
   }
 
   protected taskCount(id: string): number {
-    return this.store.counts().byCategory.get(id) ?? 0;
+    return this.categories.taskCount(id);
   }
 
   protected async create(): Promise<void> {
     const result = await this.openEditor(null);
-    if (result) this.store.addCategory(result.name, result.color);
+    if (result) this.categories.add(result.name, result.color);
   }
 
   protected async edit(category: Category): Promise<void> {
     const result = await this.openEditor(category);
-    if (result) this.store.updateCategory(category.id, result);
+    if (result) this.categories.update(category.id, result);
   }
 
   protected async remove(category: Category): Promise<void> {
@@ -97,7 +95,7 @@ export class CategoriesPage {
         {
           text: 'Eliminar',
           role: 'destructive',
-          handler: () => this.store.removeCategory(category.id),
+          handler: () => this.categories.remove(category.id),
         },
       ],
     });
@@ -105,7 +103,7 @@ export class CategoriesPage {
   }
 
   protected showTasks(category: Category): void {
-    this.store.categoryFilter.set(category.id);
+    this.categories.showTasksOf(category.id);
     void this.router.navigateByUrl('/tasks');
   }
 

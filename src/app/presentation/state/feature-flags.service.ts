@@ -6,7 +6,6 @@ import {
   FlagKey,
   FlagSource,
   FlagValues,
-  parseFlagValues,
   resolveFlag,
   resolveFlagSource,
   withOverride,
@@ -136,7 +135,7 @@ export class FeatureFlagsService {
 
   private readActiveValues(): Observable<void> {
     return this.remoteConfig.getActiveValues().pipe(
-      tap((values) => this.remoteValues.set(parseFlagValues(values))),
+      tap((values) => this.remoteValues.set(values)),
       map(() => undefined),
     );
   }

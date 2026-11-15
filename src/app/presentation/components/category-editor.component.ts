@@ -19,7 +19,7 @@ import { IonToolbar } from '@ionic/angular/ion-toolbar';
 import { ModalController } from '@ionic/angular/modal-controller';
 
 import { CATEGORY_COLORS, Category } from '../../domain/entities/category';
-import { TodoStore } from '../state/todo.store';
+import { CategoriesInteractor } from '../interactors/categories.interactor';
 
 export interface CategoryEditorResult {
   name: string;
@@ -46,7 +46,7 @@ export interface CategoryEditorResult {
 })
 export class CategoryEditorComponent implements OnInit {
   private readonly modalCtrl = inject(ModalController);
-  private readonly store = inject(TodoStore);
+  private readonly categories = inject(CategoriesInteractor);
 
   readonly category = input<Category | null>(null);
 
@@ -55,7 +55,7 @@ export class CategoryEditorComponent implements OnInit {
   protected readonly color = signal(CATEGORY_COLORS[0]);
 
   protected readonly error = computed(() =>
-    this.name().trim() && this.store.categoryNameExists(this.name(), this.category()?.id)
+    this.name().trim() && this.categories.nameExists(this.name(), this.category()?.id)
       ? 'Ya existe una categoría con ese nombre.'
       : null,
   );
@@ -66,7 +66,7 @@ export class CategoryEditorComponent implements OnInit {
       this.name.set(category.name);
       this.color.set(category.color);
     } else {
-      this.color.set(this.store.nextCategoryColor());
+      this.color.set(this.categories.nextColor());
     }
   }
 

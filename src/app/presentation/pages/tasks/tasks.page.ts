@@ -29,8 +29,7 @@ import { ToastController } from '@ionic/angular/toast-controller';
 import { addIcons } from 'ionicons';
 import { add, addCircle, checkmarkDoneCircleOutline, sparklesOutline } from 'ionicons/icons';
 
-import { FeatureFlagsService } from '../../state/feature-flags.service';
-import { TodoStore } from '../../state/todo.store';
+import { TasksInteractor } from '../../interactors/tasks.interactor';
 import { Task } from '../../../domain/entities/task';
 import { CategoryFilter, StatusFilter } from '../../../domain/rules/task-query';
 import { TASK_ITEM_HEIGHT, TaskItemComponent } from '../../components/task-item.component';
@@ -70,8 +69,7 @@ import { TaskEditorComponent, TaskEditorResult } from '../../components/task-edi
   styleUrl: './tasks.page.scss',
 })
 export class TasksPage {
-  protected readonly store = inject(TodoStore);
-  protected readonly flags = inject(FeatureFlagsService);
+  protected readonly tasks = inject(TasksInteractor);
   private readonly modals = inject(ModalController);
   private readonly alerts = inject(AlertController);
   private readonly toasts = inject(ToastController);
@@ -83,13 +81,13 @@ export class TasksPage {
   protected readonly newCategoryId = signal<string | null>(null);
 
   protected readonly progress = computed(() => {
-    const { all, completed } = this.store.counts();
+    const { all, completed } = this.tasks.counts();
     return all ? completed / all : 0;
   });
 
   protected readonly emptyMessage = computed(() => {
-    if (this.store.counts().all === 0) return 'Aún no tienes tareas. ¡Agrega la primera!';
-    if (this.store.search()) return 'Ninguna tarea coincide con la búsqueda.';
+    if (this.tasks.counts().all === 0) return 'Aún no tienes tareas. ¡Agrega la primera!';
+    if (this.tasks.search()) return 'Ninguna tarea coincide con la búsqueda.';
     return 'No hay tareas con este filtro.';
   });
 
@@ -98,20 +96,20 @@ export class TasksPage {
   }
 
   protected setCategoryFilter(filter: CategoryFilter): void {
-    this.store.categoryFilter.set(filter);
+    this.tasks.setCategoryFilter(filter);
     this.newCategoryId.set(filter === 'all' || filter === 'none' ? null : filter);
   }
 
   protected setStatusFilter(value: unknown): void {
-    this.store.statusFilter.set((value as StatusFilter) ?? 'all');
+    this.tasks.setStatusFilter((value as StatusFilter) ?? 'all');
   }
 
   protected addTask(): void {
-    if (this.store.addTask(this.newTitle(), this.newCategoryId())) this.newTitle.set('');
+    if (this.tasks.addTask(this.newTitle(), this.newCategoryId())) this.newTitle.set('');
   }
 
   protected async removeTask(id: string): Promise<void> {
-    const removed = this.store.removeTask(id);
+    const removed = this.tasks.removeTask(id);
     if (!removed) return;
     const toast = await this.toasts.create({
       message: `Tarea eliminada: «${removed.title}»`,
@@ -119,7 +117,7 @@ export class TasksPage {
       position: 'bottom',
       positionAnchor: 'tasks-footer',
       buttons: [
-        { text: 'Deshacer', role: 'cancel', handler: () => this.store.restoreTask(removed) },
+        { text: 'Deshacer', role: 'cancel', handler: () => this.tasks.restoreTask(removed) },
       ],
     });
     await toast.present();
@@ -130,26 +128,26 @@ export class TasksPage {
       component: TaskEditorComponent,
       componentProps: {
         task,
-        categories: this.store.categories(),
-        showCategories: this.flags.categoriesEnabled(),
+        categories: this.tasks.categories(),
+        showCategories: this.tasks.categoriesEnabled(),
       },
       breakpoints: [0, 0.75, 1],
       initialBreakpoint: 0.75,
     });
     await modal.present();
     const { data, role } = await modal.onWillDismiss<TaskEditorResult>();
-    if (role === 'save' && data) this.store.updateTask(task.id, data);
+    if (role === 'save' && data) this.tasks.updateTask(task.id, data);
   }
 
   protected async clearCompleted(): Promise<void> {
-    const { completed } = this.store.counts();
+    const { completed } = this.tasks.counts();
     if (!completed) return;
     const alert = await this.alerts.create({
       header: 'Eliminar completadas',
       message: `Se eliminarán ${completed} tarea(s) completada(s).`,
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
-        { text: 'Eliminar', role: 'destructive', handler: () => void this.store.clearCompleted() },
+        { text: 'Eliminar', role: 'destructive', handler: () => void this.tasks.clearCompleted() },
       ],
     });
     await alert.present();

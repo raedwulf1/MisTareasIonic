@@ -19,9 +19,8 @@ import { IonTitle } from '@ionic/angular/ion-title';
 import { IonToolbar } from '@ionic/angular/ion-toolbar';
 import { ToastController } from '@ionic/angular/toast-controller';
 
-import { FeatureFlagsService } from '../../state/feature-flags.service';
+import { SettingsInteractor } from '../../interactors/settings.interactor';
 import { FlagSource } from '../../../domain/entities/feature-flags';
-import { TodoStore } from '../../state/todo.store';
 
 const SOURCE_LABELS: Record<FlagSource, string> = {
   remote: 'Firebase Remote Config',
@@ -56,20 +55,20 @@ const SOURCE_LABELS: Record<FlagSource, string> = {
   styleUrl: './settings.page.scss',
 })
 export class SettingsPage {
-  protected readonly flags = inject(FeatureFlagsService);
+  protected readonly settings = inject(SettingsInteractor);
 
   /** Fuerza una descarga de Remote Config (ignora el intervalo mínimo de caché). */
   protected refresh(): void {
-    this.flags.refresh(true).subscribe();
+    this.settings.refreshRemoteConfig();
   }
-  protected readonly store = inject(TodoStore);
+
   private readonly alerts = inject(AlertController);
   private readonly toasts = inject(ToastController);
 
   protected readonly lastGeneration = signal<number | null>(null);
 
   protected readonly statusLabel = computed(() => {
-    switch (this.flags.status()) {
+    switch (this.settings.status()) {
       case 'unavailable':
         return 'No disponible en el navegador: se usan valores por defecto.';
       case 'loading':
@@ -77,23 +76,23 @@ export class SettingsPage {
       case 'ready':
         return 'Conectado a Firebase.';
       case 'error':
-        return `Sin conexión con Firebase (${this.flags.lastError() ?? 'error'}). Se usan los últimos valores conocidos.`;
+        return `Sin conexión con Firebase (${this.settings.lastError() ?? 'error'}). Se usan los últimos valores conocidos.`;
       default:
         return 'Inicializando…';
     }
   });
 
   protected readonly sourceLabel = computed(
-    () => SOURCE_LABELS[this.flags.source('categories_enabled')],
+    () => SOURCE_LABELS[this.settings.source('categories_enabled')],
   );
 
   protected readonly overrideValue = computed(() => {
-    if (this.flags.source('categories_enabled') !== 'override') return 'remote';
-    return this.flags.categoriesEnabled() ? 'on' : 'off';
+    if (this.settings.source('categories_enabled') !== 'override') return 'remote';
+    return this.settings.categoriesEnabled() ? 'on' : 'off';
   });
 
   protected setOverride(value: unknown): void {
-    this.flags.setOverride(
+    this.settings.setOverride(
       'categories_enabled',
       value === 'on' ? true : value === 'off' ? false : null,
     );
@@ -101,7 +100,7 @@ export class SettingsPage {
 
   protected async generate(amount: number): Promise<void> {
     const start = performance.now();
-    this.store.generateDemoTasks(amount);
+    this.settings.generateDemoTasks(amount);
     this.lastGeneration.set(performance.now() - start);
     const toast = await this.toasts.create({
       message: `Se generaron ${amount.toLocaleString('es')} tareas.`,
@@ -116,7 +115,7 @@ export class SettingsPage {
       message: 'Esta acción no se puede deshacer.',
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
-        { text: 'Eliminar', role: 'destructive', handler: () => this.store.removeAllTasks() },
+        { text: 'Eliminar', role: 'destructive', handler: () => this.settings.removeAllTasks() },
       ],
     });
     await alert.present();

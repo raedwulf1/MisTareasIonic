@@ -8,9 +8,9 @@
 </ion-header>
 
 <ion-content>
-  @if (store.categories().length) {
+  @if (categories.categories().length) {
     <ion-list>
-      @for (c of store.categories(); track c.id) {
+      @for (c of categories.categories(); track c.id) {
         <ion-item-sliding #sliding>
           <ion-item button detail="false" (click)="edit(c)">
             <span slot="start" class="categories-page__dot" [style.background]="c.color"></span>

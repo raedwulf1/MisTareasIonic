@@ -17,8 +17,7 @@ import { IonToolbar } from '@ionic/angular/ion-toolbar';
 import { addIcons } from 'ionicons';
 import { checkmarkDoneOutline, pricetagsOutline, settingsOutline } from 'ionicons/icons';
 
-import { FeatureFlagsService } from './presentation/state/feature-flags.service';
-import { TodoStore } from './presentation/state/todo.store';
+import { AppShellInteractor } from './presentation/interactors/app-shell.interactor';
 
 @Component({
   selector: 'app-root',
@@ -45,12 +44,11 @@ import { TodoStore } from './presentation/state/todo.store';
   styleUrl: './app.scss',
 })
 export class App {
-  protected readonly store = inject(TodoStore);
-  protected readonly flags = inject(FeatureFlagsService);
+  protected readonly shell = inject(AppShellInteractor);
 
   constructor() {
     addIcons({ checkmarkDoneOutline, pricetagsOutline, settingsOutline });
     // Remote Config se consulta después del primer render para no retrasar la carga inicial.
-    afterNextRender(() => this.flags.init().subscribe());
+    afterNextRender(() => this.shell.start());
   }
 }
