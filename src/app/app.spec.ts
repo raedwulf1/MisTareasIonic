@@ -3,9 +3,9 @@ import { provideRouter } from '@angular/router';
 import { Platform } from '@ionic/angular/platform';
 
 import { App } from './app';
-import { FeatureFlagsService } from './application/feature-flags.service';
-import { TodoStore } from './application/todo.store';
-import { provideInfrastructure } from './infrastructure/provide-infrastructure';
+import { FeatureFlagsService } from './presentation/state/feature-flags.service';
+import { TodoStore } from './presentation/state/todo.store';
+import { provideData } from './data/provide-data';
 
 describe('App', () => {
   let fixture: ComponentFixture<App>;
@@ -24,11 +24,11 @@ describe('App', () => {
     el = fixture.nativeElement;
   }
 
-  beforeEach(() => {
+  beforeEach(async () => {
     localStorage.clear();
     TestBed.configureTestingModule({
       providers: [
-        provideInfrastructure(),
+        provideData(),
         provideRouter([]),
         {
           provide: Platform,
@@ -42,6 +42,7 @@ describe('App', () => {
       ],
     });
     store = TestBed.inject(TodoStore);
+    await store.load();
     flags = TestBed.inject(FeatureFlagsService);
   });
 
