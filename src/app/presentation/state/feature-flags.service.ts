@@ -84,7 +84,9 @@ export class FeatureFlagsService {
    */
   init(): Observable<void> {
     return defer(() => {
-      if (this.initialized) return of(undefined);
+      if (this.initialized) {
+        return of(undefined);
+      }
       this.initialized = true;
 
       return this.remoteConfig.whenReady().pipe(
@@ -116,7 +118,9 @@ export class FeatureFlagsService {
    */
   refresh(force = false): Observable<void> {
     return defer(() => {
-      if (!this.remoteConfig.isAvailable()) return of(undefined);
+      if (!this.remoteConfig.isAvailable()) {
+        return of(undefined);
+      }
       this.status.set('loading');
       return this.remoteConfig.fetchAndActivate(force).pipe(
         switchMap(() => this.readActiveValues()),

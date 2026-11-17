@@ -64,8 +64,9 @@ export class CategoriesPage {
     addIcons({ add, createOutline, funnelOutline, pricetagsOutline, trashOutline });
     // Si Remote Config apaga la funcionalidad mientras estamos aquí, volver a la lista.
     effect(() => {
-      if (!this.categories.categoriesEnabled())
+      if (!this.categories.categoriesEnabled()) {
         void this.router.navigateByUrl('/tasks', { replaceUrl: true });
+      }
     });
   }
 
@@ -75,12 +76,16 @@ export class CategoriesPage {
 
   protected async create(): Promise<void> {
     const result = await this.openEditor(null);
-    if (result) this.categories.add(result.name, result.color);
+    if (result) {
+      this.categories.add(result.name, result.color);
+    }
   }
 
   protected async edit(category: Category): Promise<void> {
     const result = await this.openEditor(category);
-    if (result) this.categories.update(category.id, result);
+    if (result) {
+      this.categories.update(category.id, result);
+    }
   }
 
   protected async remove(category: Category): Promise<void> {

@@ -27,8 +27,12 @@ export function createAppError(
 
 /** Texto legible de una causa desconocida (los plugins de Cordova rechazan con strings u objetos). */
 export function describeCause(cause: unknown): string {
-  if (cause instanceof Error) return cause.message;
-  if (typeof cause === 'string') return cause;
+  if (cause instanceof Error) {
+    return cause.message;
+  }
+  if (typeof cause === 'string') {
+    return cause;
+  }
   try {
     return JSON.stringify(cause) ?? String(cause);
   } catch {

@@ -76,7 +76,9 @@ export class CategoryEditorComponent implements OnInit {
 
   save(): void {
     const name = this.name().trim();
-    if (!name || this.error()) return;
+    if (!name || this.error()) {
+      return;
+    }
     const result: CategoryEditorResult = { name, color: this.color() };
     void this.modalCtrl.dismiss(result, 'save');
   }

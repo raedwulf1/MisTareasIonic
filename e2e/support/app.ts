@@ -43,12 +43,19 @@ export function tasks(
 export async function seed(page: Page, data: SeedData): Promise<void> {
   await page.addInitScript(
     ({ data, keys }) => {
-      if (sessionStorage.getItem('__e2e_seeded')) return;
+      if (sessionStorage.getItem('__e2e_seeded')) {
+        return;
+      }
       sessionStorage.setItem('__e2e_seeded', '1');
-      if (data.tasks) localStorage.setItem(keys.tasks, JSON.stringify(data.tasks));
-      if (data.categories) localStorage.setItem(keys.categories, JSON.stringify(data.categories));
-      if (data.flagOverrides)
+      if (data.tasks) {
+        localStorage.setItem(keys.tasks, JSON.stringify(data.tasks));
+      }
+      if (data.categories) {
+        localStorage.setItem(keys.categories, JSON.stringify(data.categories));
+      }
+      if (data.flagOverrides) {
         localStorage.setItem(keys.flagOverrides, JSON.stringify(data.flagOverrides));
+      }
     },
     { data, keys: KEYS },
   );

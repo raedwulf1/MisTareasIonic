@@ -30,7 +30,9 @@ export class RemoveCategoryUseCase {
     const next = unassignCategory(tasks, id);
     const writes: Observable<void>[] = [this.categories.remove(id)];
     // `unassignCategory` devuelve el mismo array cuando no hay tareas afectadas.
-    if (next !== tasks) writes.push(this.tasks.replaceAll(next));
+    if (next !== tasks) {
+      writes.push(this.tasks.replaceAll(next));
+    }
     return { tasks: next, saved: forkJoin(writes).pipe(map(() => undefined)) };
   }
 }

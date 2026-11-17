@@ -18,8 +18,12 @@ export function resolveFlagSource(
   overrides: FlagValues,
   remote: FlagValues,
 ): FlagSource {
-  if (overrides[key] !== undefined) return 'override';
-  if (remote[key] !== undefined) return 'remote';
+  if (overrides[key] !== undefined) {
+    return 'override';
+  }
+  if (remote[key] !== undefined) {
+    return 'remote';
+  }
   return 'default';
 }
 
@@ -30,7 +34,10 @@ export function withOverride(
   value: boolean | null,
 ): FlagValues {
   const next = { ...overrides };
-  if (value === null) delete next[key];
-  else next[key] = value;
+  if (value === null) {
+    delete next[key];
+  } else {
+    next[key] = value;
+  }
   return next;
 }

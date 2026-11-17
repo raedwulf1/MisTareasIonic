@@ -33,7 +33,9 @@ export function filterTasks(tasks: readonly Task[], query: TaskQuery): readonly 
   const { category, status } = query;
   const term = normalizeText(query.search.trim());
 
-  if (category === 'all' && status === 'all' && !term) return tasks;
+  if (category === 'all' && status === 'all' && !term) {
+    return tasks;
+  }
 
   return tasks.filter(
     (t) =>
@@ -50,9 +52,14 @@ export function countTasks(tasks: readonly Task[]): TaskCounts {
   let completed = 0;
   let uncategorized = 0;
   for (const t of tasks) {
-    if (t.completed) completed++;
-    if (t.categoryId === null) uncategorized++;
-    else byCategory.set(t.categoryId, (byCategory.get(t.categoryId) ?? 0) + 1);
+    if (t.completed) {
+      completed++;
+    }
+    if (t.categoryId === null) {
+      uncategorized++;
+    } else {
+      byCategory.set(t.categoryId, (byCategory.get(t.categoryId) ?? 0) + 1);
+    }
   }
   return {
     all: tasks.length,

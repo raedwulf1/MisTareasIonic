@@ -86,8 +86,12 @@ export class TasksPage {
   });
 
   protected readonly emptyMessage = computed(() => {
-    if (this.tasks.counts().all === 0) return 'Aún no tienes tareas. ¡Agrega la primera!';
-    if (this.tasks.search()) return 'Ninguna tarea coincide con la búsqueda.';
+    if (this.tasks.counts().all === 0) {
+      return 'Aún no tienes tareas. ¡Agrega la primera!';
+    }
+    if (this.tasks.search()) {
+      return 'Ninguna tarea coincide con la búsqueda.';
+    }
     return 'No hay tareas con este filtro.';
   });
 
@@ -105,12 +109,16 @@ export class TasksPage {
   }
 
   protected addTask(): void {
-    if (this.tasks.addTask(this.newTitle(), this.newCategoryId())) this.newTitle.set('');
+    if (this.tasks.addTask(this.newTitle(), this.newCategoryId())) {
+      this.newTitle.set('');
+    }
   }
 
   protected async removeTask(id: string): Promise<void> {
     const removed = this.tasks.removeTask(id);
-    if (!removed) return;
+    if (!removed) {
+      return;
+    }
     const toast = await this.toasts.create({
       message: `Tarea eliminada: «${removed.title}»`,
       duration: 3500,
@@ -136,12 +144,16 @@ export class TasksPage {
     });
     await modal.present();
     const { data, role } = await modal.onWillDismiss<TaskEditorResult>();
-    if (role === 'save' && data) this.tasks.updateTask(task.id, data);
+    if (role === 'save' && data) {
+      this.tasks.updateTask(task.id, data);
+    }
   }
 
   protected async clearCompleted(): Promise<void> {
     const { completed } = this.tasks.counts();
-    if (!completed) return;
+    if (!completed) {
+      return;
+    }
     const alert = await this.alerts.create({
       header: 'Eliminar completadas',
       message: `Se eliminarán ${completed} tarea(s) completada(s).`,

@@ -27,7 +27,9 @@ export const test = base.extend<{ endStateScreenshot: void }>({
     async ({ page }, use, testInfo) => {
       await use();
       // Si el test ya falló, su propia captura de fallo es suficiente.
-      if (testInfo.status !== 'passed' || page.isClosed()) return;
+      if (testInfo.status !== 'passed' || page.isClosed()) {
+        return;
+      }
 
       // Esperar a que terminen las transiciones de Ionic (modal, alert, toast) y a las fuentes.
       await page.evaluate(() => document.fonts.ready);

@@ -130,7 +130,9 @@ export class TodoStore {
       categories: this._categories(),
       categoriesEnabled: this.flags.categoriesEnabled(),
     });
-    if (!task) return null;
+    if (!task) {
+      return null;
+    }
     // Las tareas nuevas van primero: así la lista ya está ordenada y no hay que ordenar en cada render.
     this._tasks.update((tasks) => [task, ...tasks]);
     this.persist(saved);
@@ -195,7 +197,9 @@ export class TodoStore {
       color,
       categories: this._categories(),
     });
-    if (!category) return null;
+    if (!category) {
+      return null;
+    }
     this._categories.update((list) => [...list, category]);
     this.persist(saved);
     return category;
@@ -208,7 +212,9 @@ export class TodoStore {
       id,
       changes,
     });
-    if (!accepted) return false;
+    if (!accepted) {
+      return false;
+    }
     this._categories.set(categories);
     this.persist(saved);
     return true;
@@ -230,7 +236,9 @@ export class TodoStore {
   private replaceTask(id: string, change: (task: Task) => Task): void {
     this._tasks.update((tasks) => tasks.map((t) => (t.id === id ? change(t) : t)));
     const updated = this._tasks().find((t) => t.id === id);
-    if (updated) this.persist(this.taskRepository.update(updated));
+    if (updated) {
+      this.persist(this.taskRepository.update(updated));
+    }
   }
 
   /** La UI ya está actualizada: un fallo al guardar se registra pero no revierte el estado. */

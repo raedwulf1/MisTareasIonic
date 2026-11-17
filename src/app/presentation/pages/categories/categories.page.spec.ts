@@ -76,7 +76,9 @@ describe('CategoriesPage', () => {
   });
 
   it('muestra el mensaje vacío si no hay categorías', async () => {
-    for (const c of store.categories()) store.removeCategory(c.id);
+    for (const c of store.categories()) {
+      store.removeCategory(c.id);
+    }
 
     await render();
 

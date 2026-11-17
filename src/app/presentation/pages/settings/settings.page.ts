@@ -87,7 +87,9 @@ export class SettingsPage {
   );
 
   protected readonly overrideValue = computed(() => {
-    if (this.settings.source('categories_enabled') !== 'override') return 'remote';
+    if (this.settings.source('categories_enabled') !== 'override') {
+      return 'remote';
+    }
     return this.settings.categoriesEnabled() ? 'on' : 'off';
   });
 

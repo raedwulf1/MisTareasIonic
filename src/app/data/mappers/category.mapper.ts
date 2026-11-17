@@ -9,9 +9,13 @@ export const CategoryMapper = {
 
   /** `null` si el registro guardado está dañado (sin `id` o nombre válidos). */
   toDomain(raw: unknown): Category | null {
-    if (typeof raw !== 'object' || raw === null) return null;
+    if (typeof raw !== 'object' || raw === null) {
+      return null;
+    }
     const r = raw as Record<string, unknown>;
-    if (typeof r['id'] !== 'string' || typeof r['name'] !== 'string') return null;
+    if (typeof r['id'] !== 'string' || typeof r['name'] !== 'string') {
+      return null;
+    }
     return {
       id: r['id'],
       name: r['name'],
@@ -25,7 +29,9 @@ export const CategoryMapper = {
    * una lista vacía es válida (el usuario eliminó todas).
    */
   toDomainList(raw: unknown): Category[] | null {
-    if (!Array.isArray(raw)) return null;
+    if (!Array.isArray(raw)) {
+      return null;
+    }
     return raw.flatMap((item) => CategoryMapper.toDomain(item) ?? []);
   },
 

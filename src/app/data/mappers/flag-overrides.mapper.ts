@@ -9,7 +9,9 @@ export const FlagOverridesMapper = {
     const dto: FlagOverridesDto = {};
     for (const key of FLAG_KEYS) {
       const value = overrides[key];
-      if (value !== undefined) dto[key] = value;
+      if (value !== undefined) {
+        dto[key] = value;
+      }
     }
     return dto;
   },
@@ -17,10 +19,14 @@ export const FlagOverridesMapper = {
   /** Conserva solo los flags conocidos con valor booleano; lo demás se ignora. */
   toDomain(raw: unknown): FlagValues {
     const values: FlagValues = {};
-    if (typeof raw !== 'object' || raw === null) return values;
+    if (typeof raw !== 'object' || raw === null) {
+      return values;
+    }
     const r = raw as Record<string, unknown>;
     for (const key of FLAG_KEYS) {
-      if (typeof r[key] === 'boolean') values[key] = r[key];
+      if (typeof r[key] === 'boolean') {
+        values[key] = r[key];
+      }
     }
     return values;
   },

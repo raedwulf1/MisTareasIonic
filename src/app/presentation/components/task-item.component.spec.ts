@@ -20,7 +20,9 @@ describe('TaskItemComponent', () => {
   function render(inputs: Record<string, unknown> = {}): void {
     fixture = TestBed.createComponent(TaskItemComponent);
     fixture.componentRef.setInput('task', TASK);
-    for (const [key, value] of Object.entries(inputs)) fixture.componentRef.setInput(key, value);
+    for (const [key, value] of Object.entries(inputs)) {
+      fixture.componentRef.setInput(key, value);
+    }
     fixture.detectChanges();
     el = fixture.nativeElement;
   }

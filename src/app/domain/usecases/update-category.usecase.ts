@@ -36,7 +36,9 @@ export class UpdateCategoryUseCase {
     }
     let updated: Category | undefined;
     const next = categories.map((c) => {
-      if (c.id !== id) return c;
+      if (c.id !== id) {
+        return c;
+      }
       updated = applyCategoryChanges(c, changes);
       return updated;
     });

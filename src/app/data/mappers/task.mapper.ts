@@ -15,10 +15,16 @@ export const TaskMapper = {
 
   /** `null` si el registro guardado está dañado (sin `id`, título o fecha válidos). */
   toDomain(raw: unknown): Task | null {
-    if (typeof raw !== 'object' || raw === null) return null;
+    if (typeof raw !== 'object' || raw === null) {
+      return null;
+    }
     const r = raw as Record<string, unknown>;
-    if (typeof r['id'] !== 'string' || typeof r['title'] !== 'string') return null;
-    if (typeof r['createdAt'] !== 'number' || !Number.isFinite(r['createdAt'])) return null;
+    if (typeof r['id'] !== 'string' || typeof r['title'] !== 'string') {
+      return null;
+    }
+    if (typeof r['createdAt'] !== 'number' || !Number.isFinite(r['createdAt'])) {
+      return null;
+    }
     return {
       id: r['id'],
       title: r['title'],
@@ -30,7 +36,9 @@ export const TaskMapper = {
 
   /** Lista persistida → tareas; descarta los registros dañados y devuelve `[]` si no es una lista. */
   toDomainList(raw: unknown): Task[] {
-    if (!Array.isArray(raw)) return [];
+    if (!Array.isArray(raw)) {
+      return [];
+    }
     return raw.flatMap((item) => TaskMapper.toDomain(item) ?? []);
   },
 

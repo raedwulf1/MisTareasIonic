@@ -43,6 +43,7 @@ module.exports = tseslint.config(
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       eqeqeq: ['error', 'always', { null: 'ignore' }],
       'prefer-const': 'error',
+      curly: ['error', 'all'],
       // `TaskItemComponent` expone la salida `toggle`; renombrarla rompe la API del componente.
       '@angular-eslint/no-output-native': 'off',
     },

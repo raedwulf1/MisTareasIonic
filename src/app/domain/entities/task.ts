@@ -22,7 +22,9 @@ export interface NewTask {
 /** Crea una tarea pendiente con el título recortado; devuelve `null` si el título queda vacío. */
 export function createTask({ id, title, categoryId, createdAt }: NewTask): Task | null {
   const clean = title.trim();
-  if (!clean) return null;
+  if (!clean) {
+    return null;
+  }
   return { id, title: clean, completed: false, categoryId, createdAt };
 }
 
@@ -48,7 +50,9 @@ export function insertByCreationDate(tasks: readonly Task[], task: Task): Task[]
 
 /** Quita la categoría de las tareas que la tenían asignada (sin borrar las tareas). */
 export function unassignCategory(tasks: readonly Task[], categoryId: string): readonly Task[] {
-  if (!tasks.some((t) => t.categoryId === categoryId)) return tasks;
+  if (!tasks.some((t) => t.categoryId === categoryId)) {
+    return tasks;
+  }
   return tasks.map((t) => (t.categoryId === categoryId ? { ...t, categoryId: null } : t));
 }
 

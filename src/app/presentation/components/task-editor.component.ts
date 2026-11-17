@@ -70,7 +70,9 @@ export class TaskEditorComponent implements OnInit {
 
   save(): void {
     const title = this.title().trim();
-    if (!title) return;
+    if (!title) {
+      return;
+    }
     const result: TaskEditorResult = { title, categoryId: this.categoryId() };
     void this.modalCtrl.dismiss(result, 'save');
   }

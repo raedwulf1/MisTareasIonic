@@ -9,7 +9,9 @@ export const RemoteFlagsMapper = {
     const values: FlagValues = {};
     for (const key of FLAG_KEYS) {
       const parsed = parseBoolean(raw?.[key]);
-      if (parsed !== undefined) values[key] = parsed;
+      if (parsed !== undefined) {
+        values[key] = parsed;
+      }
     }
     return values;
   },
@@ -17,14 +19,20 @@ export const RemoteFlagsMapper = {
 
 /** Acepta booleanos, cadenas habituales ("true", "1", "off"…) y objetos `{ value }` del plugin nativo. */
 export function parseBoolean(value: unknown): boolean | undefined {
-  if (typeof value === 'boolean') return value;
+  if (typeof value === 'boolean') {
+    return value;
+  }
   if (typeof value === 'object' && value !== null && 'value' in value) {
     return parseBoolean(value.value);
   }
   if (typeof value === 'string') {
     const v = value.trim().toLowerCase();
-    if (['true', '1', 'yes', 'on'].includes(v)) return true;
-    if (['false', '0', 'no', 'off'].includes(v)) return false;
+    if (['true', '1', 'yes', 'on'].includes(v)) {
+      return true;
+    }
+    if (['false', '0', 'no', 'off'].includes(v)) {
+      return false;
+    }
   }
   return undefined;
 }

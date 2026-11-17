@@ -28,7 +28,9 @@ export class UpdateTaskUseCase {
     const allowed = categoriesEnabled ? changes : withoutCategory(changes);
     let updated: Task | undefined;
     const next = tasks.map((t) => {
-      if (t.id !== id) return t;
+      if (t.id !== id) {
+        return t;
+      }
       updated = applyTaskChanges(t, allowed);
       return updated;
     });

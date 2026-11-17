@@ -85,7 +85,9 @@ export class FirebasexRemoteConfigGateway implements RemoteConfigGateway {
 
   private api(): FirebasexConfigApi {
     const api = window.FirebasexConfig;
-    if (!api) throw new Error('cordova-plugin-firebasex-config no está disponible');
+    if (!api) {
+      throw new Error('cordova-plugin-firebasex-config no está disponible');
+    }
     return api;
   }
 }
